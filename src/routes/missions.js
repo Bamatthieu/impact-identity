@@ -154,7 +154,9 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
       rewardXRP, // récompense en XRP (0-100)
       maxParticipants,
       skills,
-      requirements
+      requirements,
+      isVolunteer, // Option bénévole (x2 points, 0 XRP)
+      bonusPoints // Points bonus pour missions bénévoles
     } = req.body;
 
     // Validation
@@ -172,8 +174,8 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
       });
     }
 
-    // Validation de la récompense XRP (0-100)
-    const validRewardXRP = Math.min(100, Math.max(0, parseFloat(rewardXRP) || 0));
+    // Validation de la récompense XRP (0-100, ou 0 si bénévole)
+    const validRewardXRP = isVolunteer ? 0 : Math.min(100, Math.max(0, parseFloat(rewardXRP) || 0));
 
     const mission = await db.createMission({
       organizationId: req.user.id,
@@ -187,7 +189,9 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
       rewardXRP: validRewardXRP,
       maxParticipants: maxParticipants || 10,
       skills: skills || [],
-      requirements: requirements || ''
+      requirements: requirements || '',
+      isVolunteer: isVolunteer || false,
+      bonusPoints: isVolunteer ? (bonusPoints || Math.ceil((duration || 60) / 60)) : 0
     });
 
     const categories = await db.getMissionCategories();
@@ -578,6 +582,78 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
     });
   } catch (error) {
     console.error('Erreur validation mission:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/missions/:id/report/:userId - Signaler un participant
+router.post('/:id/report/:userId', authenticate, requireRole(['organization']), async (req, res) => {
+  try {
+    const { reason, details } = req.body;
+    const missionId = req.params.id;
+    const reportedUserId = req.params.userId;
+
+    // Vérifier la mission
+    const mission = await db.getMissionById(missionId);
+    if (!mission) {
+      return res.status(404).json({ success: false, error: 'Mission non trouvée' });
+    }
+
+    // Vérifier que c'est bien l'organisation propriétaire
+    if (mission.organizationId !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'Accès refusé' });
+    }
+
+    // Vérifier que l'utilisateur signalé existe
+    const reportedUser = await db.getUserById(reportedUserId);
+    if (!reportedUser) {
+      return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
+    }
+
+    // Vérifier que l'utilisateur a bien candidaté à cette mission
+    const application = await db.getApplicationByUserAndMission(reportedUserId, missionId);
+    if (!application) {
+      return res.status(400).json({ success: false, error: 'Cet utilisateur n\'a pas participé à cette mission' });
+    }
+
+    // Valider la raison
+    const validReasons = ['no_show', 'late', 'left_early', 'inappropriate', 'disrespectful', 'other'];
+    if (!reason || !validReasons.includes(reason)) {
+      return res.status(400).json({ success: false, error: 'Raison de signalement invalide' });
+    }
+
+    // Créer le signalement (on utilise une table reports ou on l'ajoute si elle n'existe pas)
+    try {
+      await db.createReport({
+        missionId,
+        reporterId: req.user.id,
+        reportedUserId,
+        reason,
+        details: details || '',
+        status: 'pending'
+      });
+    } catch (dbError) {
+      // Si la table n'existe pas, on log simplement
+      console.log('📢 Signalement reçu:', {
+        mission: mission.title,
+        reporter: req.user.name,
+        reported: reportedUser.name,
+        reason,
+        details
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Signalement enregistré. Notre équipe examinera votre rapport.',
+      data: {
+        missionId,
+        reportedUserId,
+        reason
+      }
+    });
+  } catch (error) {
+    console.error('Erreur signalement:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -54,6 +54,7 @@ export const applyToMission = (id, message) => api.post(`/missions/${id}/apply`,
 export const getMissionApplications = (id) => api.get(`/missions/${id}/applications`);
 export const updateApplicationStatus = (missionId, appId, status) => api.put(`/missions/${missionId}/applications/${appId}`, { status });
 export const completeMission = (id, participantIds) => api.post(`/missions/${id}/complete`, { participantIds });
+export const reportParticipant = (missionId, userId, data) => api.post(`/missions/${missionId}/report/${userId}`, data);
 
 // Admin
 export const getAdminStats = () => api.get('/admin/stats');

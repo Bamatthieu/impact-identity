@@ -3,12 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext';
 
+// Composant Toast pour les alertes
+function Toast({ message, type, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+
+  return (
+    <div className={`fixed top-4 right-4 z-50 ${bgColor} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-slide-in`}>
+      <span className="text-xl">{icon}</span>
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 hover:opacity-70">✕</button>
+    </div>
+  );
+}
+
 export default function CreateMission() {
   const navigate = useNavigate();
   const { user, isOrganization } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -21,11 +40,15 @@ export default function CreateMission() {
     requirements: '',
     address: '',
     lat: '',
-    lng: ''
+    lng: '',
+    isVolunteer: false // Option bénévole
   });
 
-  // Calculer les points automatiquement (1h = 1pt)
-  const calculatedPoints = Math.ceil(formData.duration / 60);
+  // Calculer les points automatiquement (1h = 1pt, x2 si bénévole)
+  const basePoints = Math.ceil(formData.duration / 60);
+  const calculatedPoints = formData.isVolunteer ? basePoints * 2 : basePoints;
+  // Si bénévole, XRP = 0
+  const effectiveXRP = formData.isVolunteer ? 0 : formData.rewardXRP;
 
   useEffect(() => {
     if (!isOrganization) {
@@ -40,13 +63,13 @@ export default function CreateMission() {
       const res = await api.getMissionCategories();
       setCategories(res.data.data);
     } catch (err) {
-      console.error('Erreur chargement catégories:', err);
+      setToast({ message: 'Erreur chargement catégories', type: 'error' });
     }
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
   };
 
   const handleAddressSearch = async () => {
@@ -66,21 +89,20 @@ export default function CreateMission() {
           lng: results[0].lon,
           address: results[0].display_name
         });
+        setToast({ message: 'Adresse trouvée !', type: 'success' });
       } else {
-        setError('Adresse non trouvée');
+        setToast({ message: 'Adresse non trouvée', type: 'error' });
       }
     } catch (err) {
-      console.error('Erreur géocodage:', err);
-      setError('Erreur lors de la recherche d\'adresse');
+      setToast({ message: 'Erreur lors de la recherche d\'adresse', type: 'error' });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (!formData.lat || !formData.lng) {
-      setError('Veuillez rechercher et valider l\'adresse');
+      setToast({ message: 'Veuillez rechercher et valider l\'adresse', type: 'error' });
       return;
     }
 
@@ -93,9 +115,11 @@ export default function CreateMission() {
         categoryId: parseInt(formData.categoryId),
         date: `${formData.date}T${formData.time}:00`,
         duration: parseInt(formData.duration),
-        rewardXRP: parseFloat(formData.rewardXRP),
+        rewardXRP: effectiveXRP, // 0 si bénévole
         maxParticipants: parseInt(formData.maxParticipants),
         requirements: formData.requirements,
+        isVolunteer: formData.isVolunteer,
+        bonusPoints: formData.isVolunteer ? basePoints : 0, // Points bonus si bénévole
         location: {
           lat: parseFloat(formData.lat),
           lng: parseFloat(formData.lng),
@@ -104,9 +128,10 @@ export default function CreateMission() {
       };
 
       await api.createMission(missionData);
-      navigate('/dashboard');
+      setToast({ message: 'Mission créée avec succès !', type: 'success' });
+      setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err) {
-      setError(err.response?.data?.error || 'Erreur lors de la création');
+      setToast({ message: err.response?.data?.error || 'Erreur lors de la création', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -114,6 +139,9 @@ export default function CreateMission() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      {/* Toast notification */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-700 mb-4">
@@ -124,13 +152,30 @@ export default function CreateMission() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-8">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Option Bénévole */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4">
+              <label className="flex items-center gap-4 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isVolunteer"
+                  checked={formData.isVolunteer}
+                  onChange={handleChange}
+                  className="w-6 h-6 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">💜</span>
+                    <span className="font-bold text-purple-800">Mission 100% Bénévole</span>
+                    <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">x2 Points</span>
+                  </div>
+                  <p className="text-sm text-purple-600 mt-1">
+                    Les participants reçoivent 2x plus de points et NFTs, mais 0 XRP
+                  </p>
+                </div>
+              </label>
+            </div>
+
             {/* Titre */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -295,7 +340,7 @@ export default function CreateMission() {
             {/* Récompense XRP */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Récompense XRP (0-100) *
+                Récompense XRP (0-100) {formData.isVolunteer && <span className="text-purple-600">(Désactivé - Mission bénévole)</span>}
               </label>
               <div className="flex items-center gap-4">
                 <input
@@ -306,18 +351,23 @@ export default function CreateMission() {
                   min="0"
                   max="100"
                   step="1"
-                  className="flex-1"
+                  disabled={formData.isVolunteer}
+                  className={`flex-1 ${formData.isVolunteer ? 'opacity-50' : ''}`}
                 />
-                <span className="text-2xl font-bold text-blue-600 w-24 text-center">
-                  {formData.rewardXRP} XRP
+                <span className={`text-2xl font-bold w-24 text-center ${formData.isVolunteer ? 'text-gray-400' : 'text-blue-600'}`}>
+                  {effectiveXRP} XRP
                 </span>
               </div>
-              <div className="mt-3 p-3 bg-green-50 rounded-lg">
-                <p className="text-sm text-green-700">
-                  <strong>Points gagnés :</strong> {calculatedPoints} pt{calculatedPoints > 1 ? 's' : ''} (basé sur la durée: 1h = 1pt)
+              <div className={`mt-3 p-3 rounded-lg ${formData.isVolunteer ? 'bg-purple-50' : 'bg-green-50'}`}>
+                <p className={`text-sm ${formData.isVolunteer ? 'text-purple-700' : 'text-green-700'}`}>
+                  <strong>Points gagnés :</strong> {calculatedPoints} pt{calculatedPoints > 1 ? 's' : ''} 
+                  {formData.isVolunteer && <span className="ml-1">(x2 bonus bénévole !)</span>}
                 </p>
-                <p className="text-xs text-green-600 mt-1">
-                  Les participants recevront {calculatedPoints} points + {formData.rewardXRP} XRP + un NFT de certification
+                <p className={`text-xs mt-1 ${formData.isVolunteer ? 'text-purple-600' : 'text-green-600'}`}>
+                  {formData.isVolunteer 
+                    ? `Les participants recevront ${calculatedPoints} points (2x) + un NFT spécial bénévole 💜`
+                    : `Les participants recevront ${calculatedPoints} points + ${formData.rewardXRP} XRP + un NFT de certification`
+                  }
                 </p>
               </div>
             </div>

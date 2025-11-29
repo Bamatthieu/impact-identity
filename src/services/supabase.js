@@ -189,7 +189,12 @@ class Database {
   // ==================== MISSIONS ====================
   async createMission(missionData) {
     const durationHours = (missionData.duration || 60) / 60;
-    const points = Math.ceil(durationHours);
+    let points = Math.ceil(durationHours);
+    
+    // Si mission bénévole, doubler les points
+    if (missionData.isVolunteer) {
+      points = points * 2;
+    }
 
     const { data, error } = await this.supabase
       .from('missions')
@@ -198,7 +203,7 @@ class Database {
         description: missionData.description,
         organization_id: missionData.organizationId,
         category: missionData.category || missionData.categoryId?.toString(),
-        reward_xrp: Math.min(100, Math.max(0, missionData.rewardXRP || 0)),
+        reward_xrp: missionData.isVolunteer ? 0 : Math.min(100, Math.max(0, missionData.rewardXRP || 0)),
         points: points,
         duration: missionData.duration || 60,
         max_participants: missionData.maxParticipants || 1,
@@ -208,7 +213,9 @@ class Database {
         location_lng: missionData.location?.lng || missionData.lng,
         start_date: missionData.startDate,
         end_date: missionData.endDate,
-        status: 'active'
+        status: 'active',
+        is_volunteer: missionData.isVolunteer || false,
+        bonus_points: missionData.bonusPoints || 0
       })
       .select()
       .single();
@@ -275,6 +282,14 @@ class Database {
     if (updates.maxParticipants !== undefined) dbUpdates.max_participants = updates.maxParticipants;
     if (updates.currentParticipants !== undefined) dbUpdates.current_participants = updates.currentParticipants;
     if (updates.acceptedCount !== undefined) dbUpdates.current_participants = updates.acceptedCount;
+    if (updates.duration !== undefined) dbUpdates.duration = updates.duration;
+    if (updates.address !== undefined) dbUpdates.location_address = updates.address;
+    if (updates.date !== undefined) dbUpdates.start_date = updates.date;
+    if (updates.location !== undefined) {
+      dbUpdates.location_address = updates.location.address;
+      dbUpdates.location_lat = updates.location.lat;
+      dbUpdates.location_lng = updates.location.lng;
+    }
 
     const { data, error } = await this.supabase
       .from('missions')
@@ -329,6 +344,8 @@ class Database {
       startDate: dbMission.start_date,
       endDate: dbMission.end_date,
       status: dbMission.status === 'active' ? 'published' : dbMission.status,
+      isVolunteer: dbMission.is_volunteer || false,
+      bonusPoints: dbMission.bonus_points || 0,
       applicationsCount: 0, // Calculé si nécessaire
       createdAt: dbMission.created_at
     };
@@ -749,6 +766,56 @@ class Database {
     }
 
     return leaderboard;
+  }
+
+  // ==================== REPORTS ====================
+  async createReport(reportData) {
+    const { data, error } = await this.supabase
+      .from('reports')
+      .insert({
+        mission_id: reportData.missionId,
+        reporter_id: reportData.reporterId,
+        reported_user_id: reportData.reportedUserId,
+        reason: reportData.reason,
+        details: reportData.details || '',
+        status: reportData.status || 'pending'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erreur création report:', error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  async getReports(status = null) {
+    let query = this.supabase
+      .from('reports')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data, error } = await query;
+    if (error) return [];
+    return data;
+  }
+
+  async updateReportStatus(reportId, status) {
+    const { data, error } = await this.supabase
+      .from('reports')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', reportId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 }
 

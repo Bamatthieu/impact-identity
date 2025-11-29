@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ToastContainer } from './components/Toast'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -241,6 +242,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
+      <ToastContainer />
       <AppContent />
     </AuthProvider>
   )
