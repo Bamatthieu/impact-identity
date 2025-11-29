@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../services/database');
+const db = require('../services/supabase');
 const { authenticate, requireRole } = require('../middleware/auth');
 
 // Toutes les routes admin nécessitent d'être admin
@@ -9,7 +9,7 @@ router.use(authenticate, requireRole(['admin']));
 // GET /api/admin/stats - Statistiques globales
 router.get('/stats', async (req, res) => {
   try {
-    const stats = db.getStats();
+    const stats = await db.getStats();
     res.json({
       success: true,
       data: stats
@@ -24,15 +24,17 @@ router.get('/organizations', async (req, res) => {
   try {
     const { status } = req.query; // 'pending', 'active', 'rejected', ou vide pour toutes
     
-    let organizations = db.getUsersByRole('organization');
+    let organizations = await db.getUsersByRole('organization');
     
     if (status) {
       organizations = organizations.filter(org => org.status === status);
     }
 
-    const enrichedOrgs = organizations.map(org => {
-      const missions = db.getMissionsByOrganization(org.id);
-      const orgType = db.getOrganizationTypes().find(t => t.id === org.organizationType);
+    const orgTypes = await db.getOrganizationTypes();
+    
+    const enrichedOrgs = await Promise.all(organizations.map(async (org) => {
+      const missions = await db.getMissionsByOrganization(org.id);
+      const orgType = orgTypes.find(t => t.id === org.organizationType || t.name === org.organizationType);
       
       return {
         id: org.id,
@@ -49,7 +51,7 @@ router.get('/organizations', async (req, res) => {
         missionsCount: missions.length,
         createdAt: org.createdAt
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -63,10 +65,11 @@ router.get('/organizations', async (req, res) => {
 // GET /api/admin/organizations/pending - Organisations en attente de validation
 router.get('/organizations/pending', async (req, res) => {
   try {
-    const pendingOrgs = db.getPendingOrganizations();
+    const pendingOrgs = await db.getPendingOrganizations();
+    const orgTypes = await db.getOrganizationTypes();
     
     const enrichedOrgs = pendingOrgs.map(org => {
-      const orgType = db.getOrganizationTypes().find(t => t.id === org.organizationType);
+      const orgType = orgTypes.find(t => t.id === org.organizationType || t.name === org.organizationType);
       
       return {
         id: org.id,
@@ -96,7 +99,7 @@ router.get('/organizations/pending', async (req, res) => {
 // PUT /api/admin/organizations/:id/approve - Approuver une organisation
 router.put('/organizations/:id/approve', async (req, res) => {
   try {
-    const org = db.getUserById(req.params.id);
+    const org = await db.getUserById(req.params.id);
     
     if (!org) {
       return res.status(404).json({ success: false, error: 'Organisation non trouvée' });
@@ -106,10 +109,8 @@ router.put('/organizations/:id/approve', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Cet utilisateur n\'est pas une organisation' });
     }
 
-    const updatedOrg = db.updateUser(req.params.id, { 
-      status: 'active',
-      approvedAt: new Date().toISOString(),
-      approvedBy: req.user.id
+    const updatedOrg = await db.updateUser(req.params.id, { 
+      status: 'active'
     });
 
     res.json({
@@ -129,7 +130,7 @@ router.put('/organizations/:id/approve', async (req, res) => {
 // PUT /api/admin/organizations/:id/reject - Rejeter une organisation
 router.put('/organizations/:id/reject', async (req, res) => {
   try {
-    const org = db.getUserById(req.params.id);
+    const org = await db.getUserById(req.params.id);
     
     if (!org) {
       return res.status(404).json({ success: false, error: 'Organisation non trouvée' });
@@ -141,11 +142,8 @@ router.put('/organizations/:id/reject', async (req, res) => {
 
     const { reason } = req.body;
 
-    const updatedOrg = db.updateUser(req.params.id, { 
-      status: 'rejected',
-      rejectedAt: new Date().toISOString(),
-      rejectedBy: req.user.id,
-      rejectionReason: reason || 'Non spécifié'
+    const updatedOrg = await db.updateUser(req.params.id, { 
+      status: 'rejected'
     });
 
     res.json({
@@ -165,10 +163,12 @@ router.put('/organizations/:id/reject', async (req, res) => {
 // GET /api/admin/users - Liste des utilisateurs (clients)
 router.get('/users', async (req, res) => {
   try {
-    const clients = db.getUsersByRole('client');
+    const clients = await db.getUsersByRole('client');
+    const allBadges = await db.getBadges();
     
-    const enrichedUsers = clients.map(user => {
-      const applications = db.getApplicationsByUser(user.id);
+    const enrichedUsers = await Promise.all(clients.map(async (user) => {
+      const applications = await db.getApplicationsByUser(user.id);
+      const userBadges = await db.getUserBadges(user.id);
       
       return {
         id: user.id,
@@ -179,10 +179,10 @@ router.get('/users', async (req, res) => {
         totalPoints: user.totalPoints,
         completedMissions: user.completedMissions,
         totalApplications: applications.length,
-        badges: user.badges.map(badgeId => db.getBadges().find(b => b.id === badgeId)),
+        badges: userBadges,
         createdAt: user.createdAt
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -198,7 +198,7 @@ router.get('/missions', async (req, res) => {
   try {
     const { status, organizationId } = req.query;
     
-    let missions = db.getAllMissions();
+    let missions = await db.getAllMissions();
     
     if (status) {
       missions = missions.filter(m => m.status === status);
@@ -208,10 +208,12 @@ router.get('/missions', async (req, res) => {
       missions = missions.filter(m => m.organizationId === organizationId);
     }
 
-    const enrichedMissions = missions.map(mission => {
-      const org = db.getUserById(mission.organizationId);
-      const category = db.getMissionCategories().find(c => c.id === mission.categoryId);
-      const applications = db.getApplicationsByMission(mission.id);
+    const categories = await db.getMissionCategories();
+    
+    const enrichedMissions = await Promise.all(missions.map(async (mission) => {
+      const org = await db.getUserById(mission.organizationId);
+      const category = categories.find(c => c.id === mission.categoryId || c.name === mission.category);
+      const applications = await db.getApplicationsByMission(mission.id);
       
       return {
         ...mission,
@@ -221,7 +223,7 @@ router.get('/missions', async (req, res) => {
         acceptedCount: applications.filter(a => a.status === 'accepted').length,
         completedCount: applications.filter(a => a.status === 'completed').length
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -235,7 +237,7 @@ router.get('/missions', async (req, res) => {
 // DELETE /api/admin/users/:id - Supprimer un utilisateur
 router.delete('/users/:id', async (req, res) => {
   try {
-    const user = db.getUserById(req.params.id);
+    const user = await db.getUserById(req.params.id);
     
     if (!user) {
       return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
@@ -246,9 +248,8 @@ router.delete('/users/:id', async (req, res) => {
     }
 
     // Soft delete - on change juste le statut
-    db.updateUser(req.params.id, { 
-      status: 'deleted',
-      deletedAt: new Date().toISOString()
+    await db.updateUser(req.params.id, { 
+      status: 'deleted'
     });
 
     res.json({
@@ -264,7 +265,7 @@ router.delete('/users/:id', async (req, res) => {
 router.get('/leaderboard', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
-    const leaderboard = db.getLeaderboard(limit);
+    const leaderboard = await db.getLeaderboard(limit);
 
     res.json({
       success: true,

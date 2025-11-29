@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
-const db = require('../services/database');
+const db = require('../services/supabase');
 const xrplService = require('../services/xrplService');
 
 // POST /api/auth/register - Inscription (Client ou Organisation)
@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Vérifier si l'email existe déjà
-    const existingUser = db.getUserByEmail(email);
+    const existingUser = await db.getUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ success: false, error: 'Cet email est déjà utilisé' });
     }
@@ -98,7 +98,7 @@ router.post('/register', async (req, res) => {
       userData.address = address || null;
     }
 
-    const user = db.createUser(userData);
+    const user = await db.createUser(userData);
 
     // Générer le token JWT
     const token = jwt.sign(
@@ -151,7 +151,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email et mot de passe requis' });
     }
 
-    const user = db.getUserByEmail(email);
+    const user = await db.getUserByEmail(email);
     console.log('👤 Utilisateur trouvé:', user ? { id: user.id, email: user.email, role: user.role } : 'NON TROUVÉ');
     
     if (!user) {
@@ -226,12 +226,12 @@ router.get('/me', async (req, res) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, config.jwt.secret);
     
-    const user = db.getUserById(decoded.id);
+    const user = await db.getUserById(decoded.id);
     if (!user) {
       return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
     }
 
-    const badges = db.getBadges().filter(b => user.badges.includes(b.id));
+    const badges = await db.getUserBadges(user.id);
 
     const userResponse = {
       id: user.id,
@@ -267,10 +267,11 @@ router.get('/me', async (req, res) => {
 });
 
 // GET /api/auth/organization-types - Types d'organisations disponibles
-router.get('/organization-types', (req, res) => {
+router.get('/organization-types', async (req, res) => {
+  const types = await db.getOrganizationTypes();
   res.json({
     success: true,
-    data: db.getOrganizationTypes()
+    data: types
   });
 });
 

@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../services/database');
+const db = require('../services/supabase');
 const xrplService = require('../services/xrplService');
 
 // GET /api/users - Liste tous les utilisateurs
-router.get('/', (req, res) => {
-  const users = db.getAllUsers().map(u => ({
+router.get('/', async (req, res) => {
+  const users = await db.getAllUsers();
+  const formattedUsers = users.map(u => ({
     id: u.id,
     name: u.name,
     email: u.email,
@@ -15,7 +16,7 @@ router.get('/', (req, res) => {
     badges: u.badges,
     createdAt: u.createdAt
   }));
-  res.json({ success: true, data: users });
+  res.json({ success: true, data: formattedUsers });
 });
 
 // POST /api/users - Créer un nouvel utilisateur avec wallet XRPL
@@ -28,7 +29,7 @@ router.post('/', async (req, res) => {
     }
 
     // Vérifier si l'email existe déjà
-    const existingUser = db.getAllUsers().find(u => u.email === email);
+    const existingUser = await db.getUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ success: false, error: 'Email déjà utilisé' });
     }
@@ -39,7 +40,7 @@ router.post('/', async (req, res) => {
     console.log('✅ Wallet créé:', wallet.address);
 
     // Créer l'utilisateur en base
-    const user = db.createUser({
+    const user = await db.createUser({
       name,
       email,
       walletAddress: wallet.address,
@@ -68,7 +69,7 @@ router.post('/', async (req, res) => {
 // GET /api/users/:id - Détails d'un utilisateur
 router.get('/:id', async (req, res) => {
   try {
-    const user = db.getUserById(req.params.id);
+    const user = await db.getUserById(req.params.id);
     if (!user) {
       return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
     }
@@ -78,8 +79,8 @@ router.get('/:id', async (req, res) => {
     const nfts = await xrplService.getNFTs(user.walletAddress);
     const tokenBalances = await xrplService.getTokenBalances(user.walletAddress);
 
-    // Récupérer les badges complets
-    const badges = db.getBadges().filter(b => user.badges.includes(b.id));
+    // Récupérer les badges
+    const badges = await db.getUserBadges(user.id);
 
     res.json({
       success: true,
@@ -104,25 +105,23 @@ router.get('/:id', async (req, res) => {
 });
 
 // GET /api/users/:id/actions - Actions d'un utilisateur
-router.get('/:id/actions', (req, res) => {
-  const user = db.getUserById(req.params.id);
+router.get('/:id/actions', async (req, res) => {
+  const user = await db.getUserById(req.params.id);
   if (!user) {
     return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
   }
 
-  const actions = db.getActionsByUserId(req.params.id);
-  const enrichedActions = actions.map(action => {
-    const actionType = db.getActionTypeById(action.actionTypeId);
-    return { ...action, actionType };
-  });
+  // Récupérer les candidatures complétées comme "actions"
+  const applications = await db.getApplicationsByUser(req.params.id);
+  const completedApplications = applications.filter(a => a.status === 'completed');
 
-  res.json({ success: true, data: enrichedActions });
+  res.json({ success: true, data: completedApplications });
 });
 
 // GET /api/users/:id/nfts - NFTs d'un utilisateur
 router.get('/:id/nfts', async (req, res) => {
   try {
-    const user = db.getUserById(req.params.id);
+    const user = await db.getUserById(req.params.id);
     if (!user) {
       return res.status(404).json({ success: false, error: 'Utilisateur non trouvé' });
     }

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../services/database');
+const db = require('../services/supabase');
 const xrplService = require('../services/xrplService');
 const { authenticate, requireRole } = require('../middleware/auth');
 
@@ -34,7 +34,7 @@ router.get('/status', async (req, res) => {
 // GET /api/blockchain/wallets - Liste des wallets créés
 router.get('/wallets', async (req, res) => {
   try {
-    const users = db.getAllUsers();
+    const users = await db.getAllUsers();
     
     const wallets = users
       .filter(u => u.walletAddress)
@@ -64,7 +64,7 @@ router.get('/wallet/:address', async (req, res) => {
     const { address } = req.params;
     
     // Trouver l'utilisateur associé
-    const users = db.getAllUsers();
+    const users = await db.getAllUsers();
     const user = users.find(u => u.walletAddress === address);
     
     // Récupérer les infos du wallet sur XRPL
@@ -106,7 +106,7 @@ router.get('/wallet/:address', async (req, res) => {
 // GET /api/blockchain/nfts - Tous les NFTs mintés
 router.get('/nfts', async (req, res) => {
   try {
-    const users = db.getAllUsers();
+    const users = await db.getAllUsers();
     const allNFTs = [];
     
     for (const user of users) {
@@ -143,16 +143,17 @@ router.get('/nfts', async (req, res) => {
 router.get('/transactions', async (req, res) => {
   try {
     // Récupérer les missions complétées avec NFT
-    const missions = db.getAllMissions().filter(m => m.status === 'completed');
+    const allMissions = await db.getAllMissions();
+    const missions = allMissions.filter(m => m.status === 'completed');
     const applications = [];
     
     for (const mission of missions) {
-      const missionApps = db.getApplicationsByMission(mission.id)
-        .filter(a => a.status === 'completed');
+      const missionApps = await db.getApplicationsByMission(mission.id);
+      const completedApps = missionApps.filter(a => a.status === 'completed');
       
-      for (const app of missionApps) {
-        const user = db.getUserById(app.userId);
-        const org = db.getUserById(mission.organizationId);
+      for (const app of completedApps) {
+        const user = await db.getUserById(app.userId);
+        const org = await db.getUserById(mission.organizationId);
         
         applications.push({
           id: app.id,
@@ -164,8 +165,9 @@ router.get('/transactions', async (req, res) => {
           userWallet: user?.walletAddress,
           organizationName: org?.name,
           reward: mission.reward,
+          rewardXRP: mission.rewardXRP,
           completedAt: app.completedAt || mission.completedAt,
-          category: mission.categoryId
+          category: mission.categoryId || mission.category
         });
       }
     }
@@ -188,8 +190,8 @@ router.get('/transactions', async (req, res) => {
 // GET /api/blockchain/stats - Statistiques blockchain
 router.get('/stats', async (req, res) => {
   try {
-    const users = db.getAllUsers();
-    const missions = db.getAllMissions();
+    const users = await db.getAllUsers();
+    const missions = await db.getAllMissions();
     
     const stats = {
       totalWallets: users.filter(u => u.walletAddress).length,
@@ -201,12 +203,12 @@ router.get('/stats', async (req, res) => {
     };
 
     // Compter les NFTs par catégorie
-    const categories = db.getMissionCategories();
+    const categories = await db.getMissionCategories();
     stats.nftsByCategory = {};
     
     for (const cat of categories) {
       const completedInCategory = missions.filter(
-        m => m.status === 'completed' && m.categoryId === cat.id
+        m => m.status === 'completed' && (m.categoryId === cat.id || m.category === cat.name)
       ).length;
       if (completedInCategory > 0) {
         stats.nftsByCategory[cat.name] = completedInCategory;

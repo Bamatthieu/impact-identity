@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../services/database');
+const db = require('../services/supabase');
 const { authenticate, requireRole } = require('../middleware/auth');
 const xrplService = require('../services/xrplService');
 
@@ -10,24 +10,26 @@ router.get('/', authenticate, async (req, res) => {
     let missions;
     
     if (req.user.role === 'admin') {
-      missions = db.getAllMissions();
+      missions = await db.getAllMissions();
     } else if (req.user.role === 'organization') {
-      missions = db.getMissionsByOrganization(req.user.id);
+      missions = await db.getMissionsByOrganization(req.user.id);
     } else {
       // Clients voient les missions publiées
-      missions = db.getPublishedMissions();
+      missions = await db.getPublishedMissions();
     }
 
+    const categories = await db.getMissionCategories();
+
     // Enrichir avec les informations de l'organisation
-    const enrichedMissions = missions.map(mission => {
-      const org = db.getUserById(mission.organizationId);
-      const category = db.getMissionCategories().find(c => c.id === mission.categoryId);
+    const enrichedMissions = await Promise.all(missions.map(async (mission) => {
+      const org = await db.getUserById(mission.organizationId);
+      const category = categories.find(c => c.id === mission.categoryId || c.name === mission.category);
       return {
         ...mission,
         organization: org ? { id: org.id, name: org.name, organizationType: org.organizationType } : null,
         category
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -42,11 +44,12 @@ router.get('/', authenticate, async (req, res) => {
 // GET /api/missions/public - Missions publiques pour la map (sans auth)
 router.get('/public', async (req, res) => {
   try {
-    const missions = db.getPublishedMissions();
+    const missions = await db.getPublishedMissions();
+    const categories = await db.getMissionCategories();
     
-    const enrichedMissions = missions.map(mission => {
-      const org = db.getUserById(mission.organizationId);
-      const category = db.getMissionCategories().find(c => c.id === mission.categoryId);
+    const enrichedMissions = await Promise.all(missions.map(async (mission) => {
+      const org = await db.getUserById(mission.organizationId);
+      const category = categories.find(c => c.id === mission.categoryId || c.name === mission.category);
       return {
         id: mission.id,
         title: mission.title,
@@ -55,12 +58,14 @@ router.get('/public', async (req, res) => {
         date: mission.date,
         duration: mission.duration,
         reward: mission.reward,
+        rewardXRP: mission.rewardXRP,
+        points: mission.points,
         maxParticipants: mission.maxParticipants,
         applicationsCount: mission.applicationsCount,
         category,
         organization: org ? { id: org.id, name: org.name } : null
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -72,17 +77,18 @@ router.get('/public', async (req, res) => {
 });
 
 // GET /api/missions/categories - Récupérer les catégories de missions
-router.get('/categories', (req, res) => {
+router.get('/categories', async (req, res) => {
+  const categories = await db.getMissionCategories();
   res.json({
     success: true,
-    data: db.getMissionCategories()
+    data: categories
   });
 });
 
 // GET /api/missions/:id - Récupérer une mission spécifique
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const mission = db.getMissionById(req.params.id);
+    const mission = await db.getMissionById(req.params.id);
     
     if (!mission) {
       return res.status(404).json({ success: false, error: 'Mission non trouvée' });
@@ -97,9 +103,18 @@ router.get('/:id', authenticate, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Accès refusé' });
     }
 
-    const org = db.getUserById(mission.organizationId);
-    const category = db.getMissionCategories().find(c => c.id === mission.categoryId);
-    const applications = db.getApplicationsByMission(mission.id);
+    const org = await db.getUserById(mission.organizationId);
+    const categories = await db.getMissionCategories();
+    const category = categories.find(c => c.id === mission.categoryId || c.name === mission.category);
+    const applications = await db.getApplicationsByMission(mission.id);
+
+    const enrichedApplications = await Promise.all(applications.map(async (app) => {
+      const applicant = await db.getUserById(app.userId);
+      return {
+        ...app,
+        applicant: applicant ? { id: applicant.id, name: applicant.name, email: applicant.email } : null
+      };
+    }));
 
     res.json({
       success: true,
@@ -108,13 +123,7 @@ router.get('/:id', authenticate, async (req, res) => {
         organization: org ? { id: org.id, name: org.name, organizationType: org.organizationType } : null,
         category,
         applications: req.user.role === 'organization' || req.user.role === 'admin' 
-          ? applications.map(app => {
-              const applicant = db.getUserById(app.userId);
-              return {
-                ...app,
-                applicant: applicant ? { id: applicant.id, name: applicant.name, email: applicant.email } : null
-              };
-            })
+          ? enrichedApplications
           : undefined
       }
     });
@@ -138,6 +147,7 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
       title,
       description,
       categoryId,
+      category,
       location, // { lat, lng, address }
       date,
       duration, // en minutes
@@ -148,7 +158,7 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
     } = req.body;
 
     // Validation
-    if (!title || !description || !categoryId || !location || !date) {
+    if (!title || !description || (!categoryId && !category) || !location || !date) {
       return res.status(400).json({ 
         success: false, 
         error: 'Titre, description, catégorie, localisation et date requis' 
@@ -165,11 +175,12 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
     // Validation de la récompense XRP (0-100)
     const validRewardXRP = Math.min(100, Math.max(0, parseFloat(rewardXRP) || 0));
 
-    const mission = db.createMission({
+    const mission = await db.createMission({
       organizationId: req.user.id,
       title,
       description,
-      categoryId,
+      categoryId: categoryId || category,
+      category: category || categoryId,
       location,
       date,
       duration: duration || 60,
@@ -179,14 +190,15 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
       requirements: requirements || ''
     });
 
-    const category = db.getMissionCategories().find(c => c.id === categoryId);
+    const categories = await db.getMissionCategories();
+    const missionCategory = categories.find(c => c.id === (categoryId || category) || c.name === (category || categoryId));
 
     res.status(201).json({
       success: true,
       message: 'Mission créée avec succès',
       data: {
         ...mission,
-        category,
+        category: missionCategory,
         organization: { id: req.user.id, name: req.user.name }
       }
     });
@@ -199,7 +211,7 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
 // PUT /api/missions/:id - Modifier une mission
 router.put('/:id', authenticate, requireRole(['organization', 'admin']), async (req, res) => {
   try {
-    const mission = db.getMissionById(req.params.id);
+    const mission = await db.getMissionById(req.params.id);
     
     if (!mission) {
       return res.status(404).json({ success: false, error: 'Mission non trouvée' });
@@ -219,7 +231,7 @@ router.put('/:id', authenticate, requireRole(['organization', 'admin']), async (
       }
     });
 
-    const updatedMission = db.updateMission(req.params.id, updates);
+    const updatedMission = await db.updateMission(req.params.id, updates);
 
     res.json({
       success: true,
@@ -234,7 +246,7 @@ router.put('/:id', authenticate, requireRole(['organization', 'admin']), async (
 // DELETE /api/missions/:id - Supprimer une mission
 router.delete('/:id', authenticate, requireRole(['organization', 'admin']), async (req, res) => {
   try {
-    const mission = db.getMissionById(req.params.id);
+    const mission = await db.getMissionById(req.params.id);
     
     if (!mission) {
       return res.status(404).json({ success: false, error: 'Mission non trouvée' });
@@ -245,7 +257,7 @@ router.delete('/:id', authenticate, requireRole(['organization', 'admin']), asyn
     }
 
     // Vérifier qu'il n'y a pas de candidatures acceptées
-    const applications = db.getApplicationsByMission(mission.id);
+    const applications = await db.getApplicationsByMission(mission.id);
     const hasAccepted = applications.some(a => a.status === 'accepted');
     
     if (hasAccepted) {
@@ -255,7 +267,7 @@ router.delete('/:id', authenticate, requireRole(['organization', 'admin']), asyn
       });
     }
 
-    db.deleteMission(req.params.id);
+    await db.deleteMission(req.params.id);
 
     res.json({
       success: true,
@@ -269,7 +281,7 @@ router.delete('/:id', authenticate, requireRole(['organization', 'admin']), asyn
 // POST /api/missions/:id/apply - Candidater à une mission (clients)
 router.post('/:id/apply', authenticate, requireRole(['client']), async (req, res) => {
   try {
-    const mission = db.getMissionById(req.params.id);
+    const mission = await db.getMissionById(req.params.id);
     
     if (!mission) {
       return res.status(404).json({ success: false, error: 'Mission non trouvée' });
@@ -280,18 +292,19 @@ router.post('/:id/apply', authenticate, requireRole(['client']), async (req, res
     }
 
     // Vérifier si déjà candidaté
-    const existingApplication = db.getApplicationByUserAndMission(req.user.id, mission.id);
+    const existingApplication = await db.getApplicationByUserAndMission(req.user.id, mission.id);
     if (existingApplication) {
       return res.status(400).json({ success: false, error: 'Vous avez déjà candidaté à cette mission' });
     }
 
     // Vérifier le nombre de participants
-    const acceptedApplications = db.getApplicationsByMission(mission.id).filter(a => a.status === 'accepted');
+    const applications = await db.getApplicationsByMission(mission.id);
+    const acceptedApplications = applications.filter(a => a.status === 'accepted');
     if (acceptedApplications.length >= mission.maxParticipants) {
       return res.status(400).json({ success: false, error: 'Cette mission est complète' });
     }
 
-    const application = db.createApplication({
+    const application = await db.createApplication({
       missionId: mission.id,
       userId: req.user.id,
       message: req.body.message || ''
@@ -310,7 +323,7 @@ router.post('/:id/apply', authenticate, requireRole(['client']), async (req, res
 // GET /api/missions/:id/applications - Récupérer les candidatures (organisation)
 router.get('/:id/applications', authenticate, requireRole(['organization', 'admin']), async (req, res) => {
   try {
-    const mission = db.getMissionById(req.params.id);
+    const mission = await db.getMissionById(req.params.id);
     
     if (!mission) {
       return res.status(404).json({ success: false, error: 'Mission non trouvée' });
@@ -320,10 +333,10 @@ router.get('/:id/applications', authenticate, requireRole(['organization', 'admi
       return res.status(403).json({ success: false, error: 'Accès refusé' });
     }
 
-    const applications = db.getApplicationsByMission(mission.id);
+    const applications = await db.getApplicationsByMission(mission.id);
     
-    const enrichedApplications = applications.map(app => {
-      const applicant = db.getUserById(app.userId);
+    const enrichedApplications = await Promise.all(applications.map(async (app) => {
+      const applicant = await db.getUserById(app.userId);
       return {
         ...app,
         applicant: applicant ? {
@@ -334,7 +347,7 @@ router.get('/:id/applications', authenticate, requireRole(['organization', 'admi
           completedMissions: applicant.completedMissions
         } : null
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -348,7 +361,7 @@ router.get('/:id/applications', authenticate, requireRole(['organization', 'admi
 // PUT /api/missions/:id/applications/:appId - Accepter/Rejeter une candidature
 router.put('/:id/applications/:appId', authenticate, requireRole(['organization', 'admin']), async (req, res) => {
   try {
-    const mission = db.getMissionById(req.params.id);
+    const mission = await db.getMissionById(req.params.id);
     
     if (!mission) {
       return res.status(404).json({ success: false, error: 'Mission non trouvée' });
@@ -358,7 +371,7 @@ router.put('/:id/applications/:appId', authenticate, requireRole(['organization'
       return res.status(403).json({ success: false, error: 'Accès refusé' });
     }
 
-    const application = db.getApplicationById(req.params.appId);
+    const application = await db.getApplicationById(req.params.appId);
     
     if (!application || application.missionId !== mission.id) {
       return res.status(404).json({ success: false, error: 'Candidature non trouvée' });
@@ -379,19 +392,19 @@ router.put('/:id/applications/:appId', authenticate, requireRole(['organization'
         return res.status(400).json({ success: false, error: 'Nombre maximum de participants atteint' });
       }
       // Incrémenter le compteur
-      db.updateMission(mission.id, { acceptedCount: acceptedCount + 1 });
+      await db.updateMission(mission.id, { acceptedCount: acceptedCount + 1 });
     }
 
     // Si on retire l'acceptation (passage de accepted à rejected)
     if (previousStatus === 'accepted' && status === 'rejected') {
       const acceptedCount = mission.acceptedCount || 0;
-      db.updateMission(mission.id, { acceptedCount: Math.max(0, acceptedCount - 1) });
+      await db.updateMission(mission.id, { acceptedCount: Math.max(0, acceptedCount - 1) });
     }
 
-    const updatedApplication = db.updateApplication(req.params.appId, { status });
+    const updatedApplication = await db.updateApplication(req.params.appId, { status });
 
     // Récupérer la mission mise à jour
-    const updatedMission = db.getMissionById(mission.id);
+    const updatedMission = await db.getMissionById(mission.id);
 
     res.json({
       success: true,
@@ -414,7 +427,7 @@ router.put('/:id/applications/:appId', authenticate, requireRole(['organization'
 // POST /api/missions/:id/complete - Valider une mission terminée (organisation)
 router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']), async (req, res) => {
   try {
-    const mission = db.getMissionById(req.params.id);
+    const mission = await db.getMissionById(req.params.id);
     
     if (!mission) {
       return res.status(404).json({ success: false, error: 'Mission non trouvée' });
@@ -433,30 +446,29 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
     const results = [];
 
     for (const participantId of participantIds) {
-      const application = db.getApplicationByUserAndMission(participantId, mission.id);
+      const application = await db.getApplicationByUserAndMission(participantId, mission.id);
       
       if (!application || application.status !== 'accepted') {
         continue;
       }
 
       // Marquer la candidature comme complétée
-      db.updateApplication(application.id, { status: 'completed', completedAt: new Date().toISOString() });
+      await db.updateApplication(application.id, { status: 'completed' });
 
       // Mettre à jour les stats du participant
       // Points = durée en heures (1h = 1pt)
       const earnedPoints = mission.points || Math.ceil((mission.duration || 60) / 60);
       
-      const participant = db.getUserById(participantId);
+      const participant = await db.getUserById(participantId);
       if (participant) {
         const newTotalPoints = (participant.totalPoints || 0) + earnedPoints;
         
-        db.updateUser(participantId, {
-          totalPoints: newTotalPoints,
-          completedMissions: (participant.completedMissions || 0) + 1
+        await db.updateUser(participantId, {
+          totalPoints: newTotalPoints
         });
 
         // Déterminer le niveau citoyen
-        const citizenLevel = db.getCitizenLevel(newTotalPoints);
+        const citizenLevel = await db.getCitizenLevel(newTotalPoints);
 
         // Mint un NFT pour la mission avec le niveau citoyen
         let nftResult = null;
@@ -471,9 +483,9 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
                 completedAt: new Date().toISOString(),
                 earnedPoints: earnedPoints,
                 rewardXRP: mission.rewardXRP || 0,
-                citizenLevel: citizenLevel.name,
-                citizenIcon: citizenLevel.icon,
-                category: mission.categoryId,
+                citizenLevel: citizenLevel?.name || 'Nouveau Citoyen',
+                citizenIcon: citizenLevel?.icon || '🌱',
+                category: mission.categoryId || mission.category,
                 totalPoints: newTotalPoints
               }
             );
@@ -487,7 +499,7 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
         if (mission.rewardXRP > 0 && participant.walletAddress) {
           try {
             // Récupérer l'organisation pour avoir son wallet
-            const organization = db.getUserById(mission.organizationId);
+            const organization = await db.getUserById(mission.organizationId);
             
             if (organization && organization.walletSeed && organization.walletAddress) {
               console.log(`💰 Transfert de ${mission.rewardXRP} XRP de ${organization.name} vers ${participant.name}`);
@@ -503,16 +515,18 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
                 console.log(`✅ Transfert XRP réussi: ${xrpResult.txHash}`);
                 
                 // Enregistrer la transaction dans la DB
-                db.createTransaction({
-                  type: 'xrp_reward',
-                  from: organization.walletAddress,
-                  to: participant.walletAddress,
+                await db.createTransaction({
+                  type: 'reward',
+                  fromUserId: mission.organizationId,
+                  toUserId: participantId,
+                  fromWallet: organization.walletAddress,
+                  toWallet: participant.walletAddress,
                   amount: mission.rewardXRP,
                   currency: 'XRP',
                   missionId: mission.id,
-                  participantId: participantId,
                   txHash: xrpResult.txHash,
-                  status: 'completed'
+                  status: 'completed',
+                  description: `Récompense mission: ${mission.title}`
                 });
               } else {
                 console.error('❌ Échec transfert XRP:', xrpResult.error);
@@ -538,25 +552,27 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
           success: true,
           earnedPoints,
           totalPoints: newTotalPoints,
-          citizenLevel: citizenLevel.name,
+          citizenLevel: citizenLevel?.name || 'Nouveau Citoyen',
           rewardXRP: mission.rewardXRP || 0,
           nft: nftResult,
           xrp: xrpResult
         });
 
         // Vérifier et attribuer les badges
-        db.checkAndAwardBadges(participantId);
+        await db.checkAndAwardBadges(participantId);
       }
     }
 
     // Marquer la mission comme complétée
-    db.updateMission(mission.id, { status: 'completed', completedAt: new Date().toISOString() });
+    await db.updateMission(mission.id, { status: 'completed' });
+
+    const updatedMission = await db.getMissionById(mission.id);
 
     res.json({
       success: true,
       message: 'Mission validée',
       data: {
-        mission: db.getMissionById(mission.id),
+        mission: updatedMission,
         participants: results
       }
     });

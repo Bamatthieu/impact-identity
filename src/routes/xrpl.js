@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const xrplService = require('../services/xrplService');
-const db = require('../services/database');
+const db = require('../services/supabase');
 
 // GET /api/xrpl/status - Status de la connexion XRPL
 router.get('/status', async (req, res) => {
@@ -99,7 +99,7 @@ router.get('/my-wallet', async (req, res) => {
     const nfts = await xrplService.getNFTs(user.walletAddress);
     
     // Récupérer les transactions de la DB
-    const transactions = db.getTransactionsByWallet(user.walletAddress);
+    const transactions = await db.getTransactionsByWallet(user.walletAddress);
 
     // Décoder les métadonnées des NFTs
     const decodedNFTs = nfts.map(nft => {
@@ -146,13 +146,14 @@ router.get('/my-transactions', async (req, res) => {
       return res.json({ success: true, data: [] });
     }
 
-    const transactions = db.getTransactionsByWallet(user.walletAddress);
+    const transactions = await db.getTransactionsByWallet(user.walletAddress);
+    const allUsers = await db.getAllUsers();
     
     // Enrichir avec les noms des participants
-    const enrichedTransactions = transactions.map(tx => {
-      const fromUser = db.getAllUsers().find(u => u.walletAddress === tx.from);
-      const toUser = db.getAllUsers().find(u => u.walletAddress === tx.to);
-      const mission = tx.missionId ? db.getMissionById(tx.missionId) : null;
+    const enrichedTransactions = await Promise.all(transactions.map(async (tx) => {
+      const fromUser = allUsers.find(u => u.walletAddress === tx.from);
+      const toUser = allUsers.find(u => u.walletAddress === tx.to);
+      const mission = tx.missionId ? await db.getMissionById(tx.missionId) : null;
       
       return {
         ...tx,
@@ -160,7 +161,7 @@ router.get('/my-transactions', async (req, res) => {
         toName: toUser?.name || tx.to,
         missionTitle: mission?.title || null
       };
-    });
+    }));
 
     res.json({ success: true, data: enrichedTransactions });
   } catch (error) {

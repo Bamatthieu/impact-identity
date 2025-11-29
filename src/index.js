@@ -78,10 +78,18 @@ app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Route non trouvée' });
 });
 
+// Import et initialisation de la base de données Supabase
+const db = require('./services/supabase');
+
 // Démarrage du serveur
 const PORT = config.port || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`
+
+async function startServer() {
+  // Initialiser Supabase
+  await db.init();
+  
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
 ║   🚀 Impact Identity API                                  ║
@@ -89,9 +97,13 @@ app.listen(PORT, '0.0.0.0', () => {
 ║   Server:  http://localhost:${PORT}                       ║
 ║   Env:     ${config.nodeEnv}                                ║
 ║   XRPL:    ${config.xrpl.network}                                   ║
+║   DB:      Supabase (PostgreSQL)                          ║
 ║                                                           ║
 ║   👤 Admin: admin@impact-identity.com / admin123          ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+}
+
+startServer().catch(console.error);

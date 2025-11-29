@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
-const db = require('../services/database');
+const db = require('../services/supabase');
 
 // Middleware pour vérifier l'authentification
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,7 +13,7 @@ const authenticate = (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, config.jwt.secret);
     
-    const user = db.getUserById(decoded.id);
+    const user = await db.getUserById(decoded.id);
     if (!user) {
       return res.status(401).json({ success: false, error: 'Utilisateur non trouvé' });
     }
@@ -23,7 +23,9 @@ const authenticate = (req, res, next) => {
       email: user.email,
       role: user.role,
       name: user.name,
-      status: user.status
+      status: user.status,
+      walletAddress: user.walletAddress,
+      walletSeed: user.walletSeed
     };
     
     next();
