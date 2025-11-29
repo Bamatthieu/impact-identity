@@ -3,7 +3,7 @@
 - 🇫🇷 [Version Française](#version-française)
 
 <a name="english-version"></a>
-# 🇫🇷 English Version — 🟦 Impact Identity
+# 🇬🇧 English Version — 🟦 Impact Identity
 
 ### *A decentralized reputation system rewarding real-world social & environmental actions using XRPL NFTs + MPTokens.*
 
