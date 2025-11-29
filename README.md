@@ -1,8 +1,9 @@
 # 🌐 README / Lisez-moi
-- 🇬🇧 [English Version](#-english-version)
-- 🇫🇷 [Version Française](#-version-française)
+- 🇬🇧 [English Version](#english-version)
+- 🇫🇷 [Version Française](#version-française)
 
 # 🇫🇷 English Version — 🟦 Impact Identity
+<a name="english-version"></a>
 
 ### *A decentralized reputation system rewarding real-world social & environmental actions using XRPL NFTs + MPTokens.*
 
@@ -394,6 +395,7 @@ MIT – free to use, replicate, expand.
 ---
 
 # 🇫🇷 Version Française — 🟦 Impact Identity
+<a name="version-française"></a>
 
 ### *Un système de réputation décentralisé qui transforme chaque action sociale ou environnementale en preuve vérifiable sur XRPL.*
 
