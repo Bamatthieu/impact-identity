@@ -318,33 +318,50 @@ Frontend fetches nft list for the user wallet.
 ### 1. Clone repo
 
 ```bash
-git clone https://github.com/<yourrepo>/impact-identity.git
+git clone https://github.com/<your-username>/impact-identity.git
 cd impact-identity
 ```
 
-### 2. Install backend
+### Install backend
 
 ```bash
 cd backend
 npm install
 ```
+### Environment Configuration
 
-### 3. Install frontend
+#### Backend `.env`
+
+```
+PORT=3001
+XRPL_RPC=wss://s.altnet.rippletest.net:51233
+# Ask the project lead for these keys OR run 'node scripts/initAdminWallet.js' to generate your own.
+ADMIN_WALLET_SEED=sEd...
+ADMIN_WALLET_ADDRESS=r...
+```
+#### For the shared hackathon demo: 
+
+```
+ask the Team Lead for the ADMIN_WALLET_SEED.
+```
+
+#### For personal testing: 
+
+```
+node scripts/initAdminWallet.js
+```
+
+#### This will generate a new funded wallet.
+
+
+
+### Install frontend
 
 ```bash
 cd frontend
 npm install
 ```
-
-### 4. Environment variables
-
-#### Backend `.env`
-
-```
-XRPL_RPC=wss://s.altnet.rippletest.net:51233
-ADMIN_WALLET_SEED=sn...
-DATABASE_URL=postgres://...
-```
+### Environment Configuration
 
 #### Frontend `.env`
 
@@ -355,9 +372,17 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 ### 5. Run
 
 ```bash
-cd backend && npm run dev
-cd frontend && npm run dev
+cd backend
+npm run dev
+# You should see: "✅ Server running on port 3001"
+
+
+cd frontend
+npm run dev
+# You should see: "Ready in ... http://localhost:3000"
 ```
+#### Open your browser at: http://localhost:3000.
+
 
 ---
 
@@ -688,40 +713,75 @@ Cache pour les leaderboards.
 ### Cloner le projet
 
 ```bash
-git clone https://github.com/<repo>/impact-identity.git
+git clone https://github.com/<votre-user>/impact-identity.git
+cd impact-identity
 ```
 
-### Backend
+### Configuration Backend
 
 ```bash
 cd backend
 npm install
-npm run dev
 ```
 
-### Frontend
+### Configuration du fichier .env
+
+#### Créez un fichier .env dans backend
+
+```
+PORT=3001
+XRPL_RPC=wss://s.altnet.rippletest.net:51233
+# Demandez ces clés au chef de projet OU lancez 'node scripts/initAdminWallet.js' pour générer les vôtres.
+ADMIN_WALLET_SEED=sEd...
+ADMIN_WALLET_ADDRESS=r...
+```
+#### Note pour l’équipe :
+
+```
+Pour la démo commune : demander le ADMIN_WALLET_SEED au porteur de projet.
+```
+
+#### Pour tester seul :
+
+```
+node scripts/initAdminWallet.js
+```
+
+#### Génère un wallet financé.
+
+
+### Configuration Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev
 ```
 
-### Variables d’environnement
-
-#### Backend `.env`
-
-```
-XRPL_RPC=wss://s.altnet.rippletest.net:51233
-ADMIN_WALLET_SEED=sn...
-DATABASE_URL=postgres://...
-```
-
-#### Frontend `.env`
+#### Créez ensuite le fichier .env dans frontend/ :
 
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
+
+### Lancer le projet
+
+#### Terminal 1 — Backend
+
+```
+cd backend
+npm run dev
+# Vous devriez voir : "✅ Server running on port 3001"
+```
+
+#### Terminal 2 — Frontend
+
+```
+cd frontend
+npm run dev
+# Vous devriez voir : "Ready in ... http://localhost:3000"
+```
+#### Ouvrez votre navigateur sur : http://localhost:3000
+
 
 ---
 
