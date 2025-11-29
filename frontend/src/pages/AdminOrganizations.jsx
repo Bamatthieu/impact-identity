@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext';
+import { showToast } from '../components/Toast';
 
 export default function AdminOrganizations() {
   const navigate = useNavigate();
@@ -12,6 +13,8 @@ export default function AdminOrganizations() {
   const [actionLoading, setActionLoading] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [selectedOrg, setSelectedOrg] = useState(null);
+  const [orgMissions, setOrgMissions] = useState([]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -36,9 +39,10 @@ export default function AdminOrganizations() {
     setActionLoading(id);
     try {
       await api.approveOrganization(id);
+      showToast('Organisation approuvée avec succès', 'success');
       loadOrganizations();
     } catch (error) {
-      alert(error.response?.data?.error || 'Erreur lors de l\'approbation');
+      showToast(error.response?.data?.error || 'Erreur lors de l\'approbation', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -51,11 +55,24 @@ export default function AdminOrganizations() {
       await api.rejectOrganization(rejectModal, rejectReason);
       setRejectModal(null);
       setRejectReason('');
+      showToast('Organisation rejetée', 'success');
       loadOrganizations();
     } catch (error) {
-      alert(error.response?.data?.error || 'Erreur lors du rejet');
+      showToast(error.response?.data?.error || 'Erreur lors du rejet', 'error');
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleViewMissions = async (org) => {
+    setSelectedOrg(org);
+    try {
+      // Récupérer les missions de cette organisation via l'API admin
+      const res = await api.getAdminMissions({ organizationId: org.id });
+      setOrgMissions(res.data.data || []);
+    } catch (error) {
+      console.error('Erreur chargement missions:', error);
+      setOrgMissions([]);
     }
   };
 
@@ -115,7 +132,11 @@ export default function AdminOrganizations() {
             </div>
           ) : (
             filteredOrgs.map((org) => (
-              <div key={org.id} className="bg-white rounded-xl shadow-sm p-6">
+              <div 
+                key={org.id} 
+                className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => handleViewMissions(org)}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -144,7 +165,7 @@ export default function AdminOrganizations() {
                       {org.phone && <span>📞 {org.phone}</span>}
                       {org.siret && <span>🏷️ SIRET: {org.siret}</span>}
                       <span>📅 Inscrit le {new Date(org.createdAt).toLocaleDateString('fr-FR')}</span>
-                      <span>🎯 {org.missionsCount || 0} missions</span>
+                      <span className="text-blue-600 font-medium">🎯 {org.missionsCount || 0} missions → Cliquer pour voir</span>
                     </div>
                     {org.walletAddress && (
                       <p className="mt-2 text-xs font-mono text-gray-400">
@@ -154,7 +175,7 @@ export default function AdminOrganizations() {
                   </div>
 
                   {org.status === 'pending' && (
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => handleApprove(org.id)}
                         disabled={actionLoading === org.id}
@@ -210,6 +231,78 @@ export default function AdminOrganizations() {
                   Confirmer le rejet
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal missions de l'organisation */}
+        {selectedOrg && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">🎯 Missions de {selectedOrg.name}</h3>
+                  <p className="text-gray-500 text-sm">{orgMissions.length} mission(s)</p>
+                </div>
+                <button 
+                  onClick={() => setSelectedOrg(null)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {orgMissions.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">📭</div>
+                  <p className="text-gray-500">Aucune mission créée</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orgMissions.map((mission) => (
+                    <div key={mission.id} className="border rounded-xl p-4 hover:bg-gray-50">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">{mission.title}</h4>
+                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">{mission.description}</p>
+                          <div className="flex flex-wrap gap-3 mt-3 text-xs">
+                            <span className={`px-2 py-1 rounded-full ${
+                              mission.status === 'published' || mission.status === 'active' ? 'bg-green-100 text-green-700' :
+                              mission.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {mission.status === 'published' || mission.status === 'active' ? '🟢 Active' :
+                               mission.status === 'completed' ? '✅ Terminée' :
+                               mission.status}
+                            </span>
+                            {mission.isVolunteer && (
+                              <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                                💜 Bénévole
+                              </span>
+                            )}
+                            <span className="text-gray-500">
+                              👥 {mission.currentParticipants || 0}/{mission.maxParticipants} participants
+                            </span>
+                            <span className="text-gray-500">
+                              ⭐ {mission.points || 0} pts
+                            </span>
+                            <span className="text-gray-500">
+                              💰 {mission.rewardXRP || 0} XRP
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                onClick={() => setSelectedOrg(null)}
+                className="mt-6 w-full py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+              >
+                Fermer
+              </button>
             </div>
           </div>
         )}

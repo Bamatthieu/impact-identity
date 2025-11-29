@@ -159,8 +159,22 @@ router.post('/', authenticate, requireRole(['organization']), async (req, res) =
       bonusPoints // Points bonus pour missions bénévoles
     } = req.body;
 
-    // Validation
-    if (!title || !description || (!categoryId && !category) || !location || !date) {
+    // Debug log
+    console.log('📝 Création mission - données reçues:', {
+      title: !!title,
+      description: !!description,
+      categoryId,
+      category,
+      location,
+      date
+    });
+
+    // Validation - categoryId peut être un UUID (string) ou un nombre
+    const hasCategoryId = categoryId && categoryId !== '' && categoryId !== '0' && categoryId !== 0;
+    const hasCategory = category && category !== '';
+    
+    if (!title || !description || (!hasCategoryId && !hasCategory) || !location || !date) {
+      console.log('❌ Validation échouée:', { title: !!title, description: !!description, hasCategoryId, hasCategory, location: !!location, date: !!date });
       return res.status(400).json({ 
         success: false, 
         error: 'Titre, description, catégorie, localisation et date requis' 
@@ -460,19 +474,25 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
       await db.updateApplication(application.id, { status: 'completed' });
 
       // Mettre à jour les stats du participant
-      // Points = durée en heures (1h = 1pt)
-      const earnedPoints = mission.points || Math.ceil((mission.duration || 60) / 60);
+      // Points = durée en heures (1h = 1pt), x2 si bénévole
+      const basePoints = mission.points || Math.ceil((mission.duration || 60) / 60);
+      const earnedPoints = mission.isVolunteer ? basePoints * 2 : basePoints;
       
       const participant = await db.getUserById(participantId);
       if (participant) {
-        const newTotalPoints = (participant.totalPoints || 0) + earnedPoints;
+        const previousTotalPoints = participant.totalPoints || 0;
+        const newTotalPoints = previousTotalPoints + earnedPoints;
+        
+        // Récupérer le niveau citoyen AVANT et APRÈS
+        const previousLevel = await db.getCitizenLevel(previousTotalPoints);
+        const newLevel = await db.getCitizenLevel(newTotalPoints);
+        
+        // Détecter si l'utilisateur a changé de niveau
+        const leveledUp = previousLevel.id !== newLevel.id;
         
         await db.updateUser(participantId, {
           totalPoints: newTotalPoints
         });
-
-        // Déterminer le niveau citoyen
-        const citizenLevel = await db.getCitizenLevel(newTotalPoints);
 
         // Mint un NFT pour la mission avec le niveau citoyen
         let nftResult = null;
@@ -487,15 +507,75 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
                 completedAt: new Date().toISOString(),
                 earnedPoints: earnedPoints,
                 rewardXRP: mission.rewardXRP || 0,
-                citizenLevel: citizenLevel?.name || 'Nouveau Citoyen',
-                citizenIcon: citizenLevel?.icon || '🌱',
+                isVolunteer: mission.isVolunteer || false,
+                citizenLevel: newLevel?.name || 'Nouveau Citoyen',
+                citizenIcon: newLevel?.icon || '🌱',
                 category: mission.categoryId || mission.category,
                 totalPoints: newTotalPoints
               }
             );
+            
+            // Enregistrer le NFT mint dans la DB (pour le tracking blockchain)
+            if (nftResult && nftResult.nftokenId) {
+              await db.createTransaction({
+                type: 'nft_mint',
+                fromUserId: null,
+                toUserId: participantId,
+                fromWallet: null,
+                toWallet: participant.walletAddress,
+                amount: 0,
+                currency: 'NFT',
+                missionId: mission.id,
+                txHash: nftResult.txHash || nftResult.nftokenId,
+                status: 'completed',
+                description: `NFT mission: ${mission.title}${mission.isVolunteer ? ' (Bénévole)' : ''}`
+              });
+            }
           }
         } catch (nftError) {
           console.error('Erreur mint NFT:', nftError);
+        }
+
+        // 🏅 Si l'utilisateur a changé de niveau, minter un NFT Badge
+        let badgeNftResult = null;
+        if (leveledUp && participant.walletSeed) {
+          try {
+            console.log(`🎉 ${participant.name} passe au niveau ${newLevel.name}!`);
+            
+            badgeNftResult = await xrplService.mintBadgeNFT(
+              { seed: participant.walletSeed },
+              {
+                levelName: newLevel.name,
+                levelIcon: newLevel.icon,
+                levelColor: newLevel.color,
+                minPoints: newLevel.minPoints,
+                totalPoints: newTotalPoints,
+                userId: participantId,
+                userName: participant.name
+              }
+            );
+            
+            // Enregistrer le Badge NFT dans la DB
+            if (badgeNftResult && badgeNftResult.success) {
+              await db.createTransaction({
+                type: 'nft_mint', // ✅ Type standard accepté par la DB
+                fromUserId: null,
+                toUserId: participantId,
+                fromWallet: null,
+                toWallet: participant.walletAddress,
+                amount: 0,
+                currency: 'BADGE_NFT', // Permet de différencier badge vs mission NFT
+                missionId: null,
+                txHash: badgeNftResult.txHash || badgeNftResult.nftokenId,
+                status: 'completed',
+                description: `🏅 Badge NFT: ${newLevel.name} ${newLevel.icon}`
+              });
+              
+              console.log(`✅ Badge NFT minté: ${newLevel.name} pour ${participant.name}`);
+            }
+          } catch (badgeError) {
+            console.error('Erreur mint Badge NFT:', badgeError);
+          }
         }
 
         // Envoyer les XRP réels si récompense définie et wallets disponibles
@@ -556,9 +636,12 @@ router.post('/:id/complete', authenticate, requireRole(['organization', 'admin']
           success: true,
           earnedPoints,
           totalPoints: newTotalPoints,
-          citizenLevel: citizenLevel?.name || 'Nouveau Citoyen',
+          previousLevel: previousLevel?.name || 'Nouveau Citoyen',
+          citizenLevel: newLevel?.name || 'Nouveau Citoyen',
+          leveledUp: leveledUp,
           rewardXRP: mission.rewardXRP || 0,
           nft: nftResult,
+          badgeNft: badgeNftResult,
           xrp: xrpResult
         });
 

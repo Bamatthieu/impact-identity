@@ -69,7 +69,8 @@ export default function CreateMission() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+    console.log('handleChange:', { name, value, type, valueType: typeof value }); // Debug
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleAddressSearch = async () => {
@@ -101,6 +102,29 @@ export default function CreateMission() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation côté client
+    console.log('formData avant validation:', formData); // Debug
+    
+    if (!formData.title.trim()) {
+      setToast({ message: 'Le titre est requis', type: 'error' });
+      return;
+    }
+    if (!formData.description.trim()) {
+      setToast({ message: 'La description est requise', type: 'error' });
+      return;
+    }
+    if (!formData.categoryId || formData.categoryId === '') {
+      setToast({ message: 'Veuillez sélectionner une catégorie', type: 'error' });
+      return;
+    }
+    if (!formData.date) {
+      setToast({ message: 'La date est requise', type: 'error' });
+      return;
+    }
+    if (!formData.time) {
+      setToast({ message: 'L\'heure est requise', type: 'error' });
+      return;
+    }
     if (!formData.lat || !formData.lng) {
       setToast({ message: 'Veuillez rechercher et valider l\'adresse', type: 'error' });
       return;
@@ -109,14 +133,15 @@ export default function CreateMission() {
     setLoading(true);
 
     try {
+      // categoryId est un UUID (string), pas un nombre
       const missionData = {
-        title: formData.title,
-        description: formData.description,
-        categoryId: parseInt(formData.categoryId),
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        categoryId: formData.categoryId, // UUID string
         date: `${formData.date}T${formData.time}:00`,
-        duration: parseInt(formData.duration),
+        duration: Number(formData.duration) || 60,
         rewardXRP: effectiveXRP, // 0 si bénévole
-        maxParticipants: parseInt(formData.maxParticipants),
+        maxParticipants: Number(formData.maxParticipants) || 10,
         requirements: formData.requirements,
         isVolunteer: formData.isVolunteer,
         bonusPoints: formData.isVolunteer ? basePoints : 0, // Points bonus si bénévole
@@ -127,10 +152,13 @@ export default function CreateMission() {
         }
       };
 
+      console.log('Envoi mission:', missionData); // Debug
+
       await api.createMission(missionData);
       setToast({ message: 'Mission créée avec succès !', type: 'success' });
       setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err) {
+      console.error('Erreur création mission:', err.response?.data);
       setToast({ message: err.response?.data?.error || 'Erreur lors de la création', type: 'error' });
     } finally {
       setLoading(false);

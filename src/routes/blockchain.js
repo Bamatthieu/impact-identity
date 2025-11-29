@@ -192,12 +192,27 @@ router.get('/stats', async (req, res) => {
   try {
     const users = await db.getAllUsers();
     const missions = await db.getAllMissions();
+    const completedMissions = missions.filter(m => m.status === 'completed');
+    
+    // Compter les NFTs mintés (= applications complétées avec des participants ayant un wallet)
+    let totalNFTsMinted = 0;
+    for (const mission of completedMissions) {
+      const apps = await db.getApplicationsByMission(mission.id);
+      const completedApps = apps.filter(a => a.status === 'completed');
+      for (const app of completedApps) {
+        const user = await db.getUserById(app.userId);
+        if (user && user.walletAddress) {
+          totalNFTsMinted++;
+        }
+      }
+    }
     
     const stats = {
       totalWallets: users.filter(u => u.walletAddress).length,
       clientWallets: users.filter(u => u.walletAddress && u.role === 'client').length,
       organizationWallets: users.filter(u => u.walletAddress && u.role === 'organization').length,
-      completedMissions: missions.filter(m => m.status === 'completed').length,
+      completedMissions: completedMissions.length,
+      totalNFTsMinted: totalNFTsMinted,
       totalPointsOnChain: users.reduce((sum, u) => sum + (u.totalPoints || 0), 0),
       network: 'XRPL Testnet'
     };
@@ -207,11 +222,24 @@ router.get('/stats', async (req, res) => {
     stats.nftsByCategory = {};
     
     for (const cat of categories) {
-      const completedInCategory = missions.filter(
-        m => m.status === 'completed' && (m.categoryId === cat.id || m.category === cat.name)
-      ).length;
-      if (completedInCategory > 0) {
-        stats.nftsByCategory[cat.name] = completedInCategory;
+      let nftsInCategory = 0;
+      const missionsInCategory = completedMissions.filter(
+        m => m.categoryId === cat.id || m.category === cat.name || m.category === String(cat.id)
+      );
+      
+      for (const mission of missionsInCategory) {
+        const apps = await db.getApplicationsByMission(mission.id);
+        const completedApps = apps.filter(a => a.status === 'completed');
+        for (const app of completedApps) {
+          const user = await db.getUserById(app.userId);
+          if (user && user.walletAddress) {
+            nftsInCategory++;
+          }
+        }
+      }
+      
+      if (nftsInCategory > 0) {
+        stats.nftsByCategory[cat.name] = nftsInCategory;
       }
     }
 

@@ -196,6 +196,14 @@ class Database {
       points = points * 2;
     }
 
+    // Gérer la date correctement
+    let startDate = null;
+    if (missionData.date) {
+      startDate = missionData.date;
+    } else if (missionData.startDate) {
+      startDate = missionData.startDate;
+    }
+
     const { data, error } = await this.supabase
       .from('missions')
       .insert({
@@ -211,8 +219,8 @@ class Database {
         location_address: missionData.location?.address || missionData.address,
         location_lat: missionData.location?.lat || missionData.lat,
         location_lng: missionData.location?.lng || missionData.lng,
-        start_date: missionData.startDate,
-        end_date: missionData.endDate,
+        start_date: startDate,
+        end_date: missionData.endDate || null,
         status: 'active',
         is_volunteer: missionData.isVolunteer || false,
         bonus_points: missionData.bonusPoints || 0

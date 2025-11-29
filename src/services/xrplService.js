@@ -97,7 +97,7 @@ class XRPLService {
     }
   }
 
-  // Mint un NFT Proof-of-Impact
+  // Mint un NFT Proof-of-Impact (mission completion)
   async mintNFT(wallet, metadata) {
     await this.connect();
     
@@ -111,7 +111,7 @@ class XRPLService {
       Account: userWallet.address,
       URI: metadataHex,
       Flags: 8, // tfTransferable
-      NFTokenTaxon: 0
+      NFTokenTaxon: 0 // Taxon 0 = Mission NFT
     };
 
     const prepared = await this.client.autofill(transactionBlob);
@@ -128,6 +128,127 @@ class XRPLService {
       nftokenId: latestNFT?.NFTokenID || null,
       metadata: metadata
     };
+  }
+
+  // Mint un NFT Badge pour un nouveau niveau citoyen
+  async mintBadgeNFT(wallet, badgeMetadata, retryCount = 0) {
+    await this.connect();
+    
+    try {
+      const userWallet = xrpl.Wallet.fromSeed(wallet.seed);
+      
+      // Attente progressive en cas de retry
+      if (retryCount === 0) {
+        // Petit délai initial pour laisser respirer le compte
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      
+      // ---------------------------------------------------------
+      // 1. OPTIMISATION DES MÉTADONNÉES (Fix URI trop longue)
+      // ---------------------------------------------------------
+      // On raccourcit les clés pour tenir dans 256 bytes
+      const metadata = {
+        t: 'badge',                       // type -> t
+        lvl: badgeMetadata.levelName,     // levelName -> lvl
+        icon: badgeMetadata.levelIcon,    // levelIcon -> icon
+        pts: badgeMetadata.totalPoints,   // totalPoints -> pts
+        d: new Date().toISOString().split('T')[0] // Date courte YYYY-MM-DD
+        // On supprime 'description' et 'platform' qui prennent trop de place
+      };
+      
+      const metadataStr = JSON.stringify(metadata);
+      
+      // Vérification avant conversion
+      if (Buffer.byteLength(metadataStr, 'utf8') > 256) {
+         console.warn("⚠️ Attention: Metadata encore trop longue, tentative de réduction ultime...");
+         delete metadata.icon; // On sacrifie l'icone si nécessaire
+      }
+
+      const metadataHex = Buffer.from(JSON.stringify(metadata)).toString('hex').toUpperCase();
+      
+      console.log(`🏅 Minting Badge NFT: ${badgeMetadata.levelName} pour ${userWallet.address}`);
+      
+      // ---------------------------------------------------------
+      // 2. GESTION DU LEDGER SEQUENCE (Fix Timeout)
+      // ---------------------------------------------------------
+      // On récupère le ledger tout frais, APRÈS toutes les attentes
+      const currentLedgerIndex = await this.client.getLedgerIndex();
+      console.log(`📊 Ledger actuel: ${currentLedgerIndex}, fenêtre jusqu'à ${currentLedgerIndex + 50}`);
+      
+      const transaction = {
+        TransactionType: 'NFTokenMint',
+        Account: userWallet.address,
+        URI: metadataHex,
+        Flags: 8, // 8 = tfTransferable (souvent mieux pour compatibilité), 0 = Soulbound
+        NFTokenTaxon: 1, 
+        // On donne une fenêtre large de ~3 minutes (50 ledgers)
+        LastLedgerSequence: currentLedgerIndex + 50
+      };
+
+      // Submit gère l'autofill, la signature et l'envoi
+      // On ne passe PAS 'autofill: true' explicitement pour LastLedgerSequence car on l'a défini manuellement
+      // Mais xrpl.js va autofill Sequence et Fee automatiquement.
+      const submitResponse = await this.client.submit(transaction, { 
+        wallet: userWallet 
+      });
+      
+      const txHash = submitResponse.result.tx_json?.hash || submitResponse.result.hash;
+      const engineResult = submitResponse.result.engine_result;
+      
+      console.log(`📤 Badge NFT transaction soumise: ${txHash} (${engineResult})`);
+      
+      // Vérification stricte
+      const isAccepted = engineResult === 'tesSUCCESS' || engineResult.startsWith('tes');
+      
+      if (!isAccepted) {
+        throw new Error(`Transaction rejected: ${engineResult} - ${submitResponse.result.engine_result_message}`);
+      }
+      
+      // Attente validation du réseau
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      
+      // Récupération du TokenID (identique à votre code)
+      let nftokenId = null;
+      try {
+        const nfts = await this.getNFTs(userWallet.address);
+        const latestNFT = nfts[nfts.length - 1];
+        nftokenId = latestNFT?.NFTokenID || null;
+      } catch (nftError) {
+        console.log(`⚠️ NFT minté mais ID pas encore visible: ${nftError.message}`);
+      }
+
+      console.log(`✅ Badge NFT ${badgeMetadata.levelName}: Succès (${txHash})`);
+
+      return {
+        success: true,
+        txHash: txHash,
+        nftokenId: nftokenId,
+        metadata: metadata,
+        levelName: badgeMetadata.levelName,
+        levelIcon: badgeMetadata.levelIcon
+      };
+
+    } catch (error) {
+      console.error('❌ Erreur mint Badge NFT:', error.message);
+      
+      // Retry intelligent
+      if (retryCount < 2 && (
+        error.message.includes('Sequence') || 
+        error.message.includes('temMALFORMED') || // Parfois temMALFORMED est temporaire sur testnet
+        error.message.includes('timeout') ||
+        error.message.includes('ECONNRESET')
+      )) {
+        console.log(`🔄 Retry mint Badge NFT (tentative ${retryCount + 2}/3)...`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        return this.mintBadgeNFT(wallet, badgeMetadata, retryCount + 1);
+      }
+      
+      return {
+        success: false,
+        error: error.message,
+        levelName: badgeMetadata.levelName
+      };
+    }
   }
 
   // Récupérer les NFTs d'un compte

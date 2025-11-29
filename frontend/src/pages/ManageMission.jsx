@@ -109,8 +109,21 @@ export default function ManageMission() {
     try {
       const acceptedParticipants = applications.filter(a => a.status === 'accepted');
       const participantIds = acceptedParticipants.map(a => a.userId);
-      await api.completeMission(id, participantIds);
-      showToast('Mission validée ! Les participants ont reçu leurs récompenses.', 'success');
+      const response = await api.completeMission(id, participantIds);
+      
+      // Vérifier si quelqu'un a monté de niveau
+      const participants = response.data.data?.participants || [];
+      const leveledUpParticipants = participants.filter(p => p.leveledUp);
+      
+      if (leveledUpParticipants.length > 0) {
+        const badgeMessages = leveledUpParticipants.map(p => 
+          `🏅 Badge NFT minté pour niveau ${p.citizenLevel}!`
+        ).join(' ');
+        showToast(`Mission validée ! ${badgeMessages}`, 'success');
+      } else {
+        showToast('Mission validée ! Les participants ont reçu leurs récompenses.', 'success');
+      }
+      
       setTimeout(() => navigate('/dashboard'), 2000);
     } catch (err) {
       showToast(err.response?.data?.error || 'Erreur validation', 'error');

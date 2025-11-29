@@ -12,6 +12,7 @@ import Leaderboard from './pages/Leaderboard'
 import Wallet from './pages/Wallet'
 import AdminOrganizations from './pages/AdminOrganizations'
 import AdminBlockchain from './pages/AdminBlockchain'
+import AdminUsers from './pages/AdminUsers'
 
 // Composant pour protéger les routes
 function ProtectedRoute({ children, roles = [] }) {
@@ -221,6 +222,12 @@ function AppContent() {
           <Route path="/admin/organizations" element={
             <ProtectedRoute roles={['admin']}>
               <AdminOrganizations />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/admin/users" element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminUsers />
             </ProtectedRoute>
           } />
           

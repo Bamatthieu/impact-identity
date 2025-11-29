@@ -100,7 +100,7 @@ export default function AdminBlockchain() {
               <span className="text-2xl">✅</span>
             </div>
             <div className="text-3xl font-bold text-green-600">{stats?.completedMissions || 0}</div>
-            <div className="text-sm text-gray-500 mt-1">NFTs mintés</div>
+            <div className="text-sm text-gray-500 mt-1">{stats?.totalNFTsMinted || 0} NFTs mintés</div>
           </div>
           
           <div className="bg-white rounded-2xl shadow-sm p-6">

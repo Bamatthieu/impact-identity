@@ -104,10 +104,16 @@ export default function Wallet() {
             <p className="font-mono text-sm break-all">{wallet?.address}</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-4 gap-4 mt-6">
             <div className="text-center">
               <p className="text-2xl font-bold">{wallet?.nftsCount || 0}</p>
-              <p className="text-blue-200 text-sm">NFTs</p>
+              <p className="text-blue-200 text-sm">NFTs Total</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-purple-300">
+                {wallet?.nfts?.filter(n => n.metadata?.type === 'citizen_badge').length || 0}
+              </p>
+              <p className="text-blue-200 text-sm">Badges</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-green-300">+{wallet?.totalReceived?.toFixed(2) || 0}</p>
@@ -124,48 +130,126 @@ export default function Wallet() {
         {wallet?.nfts?.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">🏆 Mes NFTs ({wallet.nfts.length})</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {wallet.nfts.map((nft, index) => (
-                <div key={nft.NFTokenID || index} className="border rounded-xl p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-3xl">{nft.metadata?.citizenIcon || '🎖️'}</span>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {nft.metadata?.missionTitle || 'Mission Impact'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {nft.metadata?.citizenLevel || 'Certificat'}
+            
+            {/* Badges NFT (Niveaux Citoyens) */}
+            {wallet.nfts.filter(nft => nft.metadata?.type === 'citizen_badge' || nft.metadata?.t === 'badge').length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-purple-700 mb-3">🏅 Badges de Niveau</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {wallet.nfts.filter(nft => nft.metadata?.type === 'citizen_badge' || nft.metadata?.t === 'badge').map((nft, index) => {
+                    // Support à la fois l'ancien format (type, levelName) et le nouveau (t, lvl)
+                    const isBadge = nft.metadata?.type === 'citizen_badge' || nft.metadata?.t === 'badge';
+                    const levelName = nft.metadata?.levelName || nft.metadata?.lvl || 'Badge Citoyen';
+                    const levelIcon = nft.metadata?.levelIcon || nft.metadata?.icon || '🏅';
+                    const levelColor = nft.metadata?.levelColor || '#8B5CF6';
+                    const totalPoints = nft.metadata?.totalPoints || nft.metadata?.pts || 0;
+                    const minPoints = nft.metadata?.minPoints || 0;
+                    const earnedAt = nft.metadata?.earnedAt || nft.metadata?.d;
+                    
+                    return (
+                    <div 
+                      key={nft.NFTokenID || index} 
+                      className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white rounded-xl p-4 hover:shadow-lg transition-all"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div 
+                          className="w-14 h-14 rounded-full flex items-center justify-center text-3xl"
+                          style={{ backgroundColor: levelColor + '20', border: `2px solid ${levelColor}` }}
+                        >
+                          {levelIcon}
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg text-gray-900">
+                            {levelName}
+                          </p>
+                          <p className="text-sm text-purple-600">
+                            Badge NFT non-transférable
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-3 text-sm">
+                        {minPoints > 0 && (
+                          <div className="flex justify-between mb-1">
+                            <span className="text-gray-500">Points requis</span>
+                            <span className="font-semibold text-purple-600">{minPoints} pts</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between mb-1">
+                          <span className="text-gray-500">Points au moment</span>
+                          <span className="font-semibold text-green-600">{totalPoints} pts</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Obtenu le</span>
+                          <span className="text-gray-700">
+                            {earnedAt 
+                              ? new Date(earnedAt).toLocaleDateString('fr-FR')
+                              : '-'}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2 font-mono truncate">
+                        ID: {nft.NFTokenID?.slice(0, 20)}...
                       </p>
                     </div>
-                  </div>
-                  {nft.metadata && (
-                    <div className="bg-gray-50 rounded-lg p-3 text-sm">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-gray-500">Points gagnés</span>
-                        <span className="font-semibold text-green-600">+{nft.metadata.earnedPoints || 0} pts</span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Missions NFT */}
+            {wallet.nfts.filter(nft => nft.metadata?.type !== 'citizen_badge').length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-blue-700 mb-3">🎖️ NFTs de Missions</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {wallet.nfts.filter(nft => nft.metadata?.type !== 'citizen_badge').map((nft, index) => (
+                    <div key={nft.NFTokenID || index} className="border rounded-xl p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-3xl">{nft.metadata?.citizenIcon || '🎖️'}</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {nft.metadata?.missionTitle || 'Mission Impact'}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {nft.metadata?.citizenLevel || 'Certificat'}
+                            {nft.metadata?.isVolunteer && (
+                              <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full">
+                                Bénévole 💜
+                              </span>
+                            )}
+                          </p>
+                        </div>
                       </div>
-                      {nft.metadata.rewardXRP > 0 && (
-                        <div className="flex justify-between mb-1">
-                          <span className="text-gray-500">XRP reçus</span>
-                          <span className="font-semibold text-blue-600">+{nft.metadata.rewardXRP} XRP</span>
+                      {nft.metadata && (
+                        <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-gray-500">Points gagnés</span>
+                            <span className="font-semibold text-green-600">+{nft.metadata.earnedPoints || 0} pts</span>
+                          </div>
+                          {nft.metadata.rewardXRP > 0 && (
+                            <div className="flex justify-between mb-1">
+                              <span className="text-gray-500">XRP reçus</span>
+                              <span className="font-semibold text-blue-600">+{nft.metadata.rewardXRP} XRP</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Date</span>
+                            <span className="text-gray-700">
+                              {nft.metadata.completedAt 
+                                ? new Date(nft.metadata.completedAt).toLocaleDateString('fr-FR')
+                                : '-'}
+                            </span>
+                          </div>
                         </div>
                       )}
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Date</span>
-                        <span className="text-gray-700">
-                          {nft.metadata.completedAt 
-                            ? new Date(nft.metadata.completedAt).toLocaleDateString('fr-FR')
-                            : '-'}
-                        </span>
-                      </div>
+                      <p className="text-xs text-gray-400 mt-2 font-mono truncate">
+                        ID: {nft.NFTokenID?.slice(0, 20)}...
+                      </p>
                     </div>
-                  )}
-                  <p className="text-xs text-gray-400 mt-2 font-mono truncate">
-                    ID: {nft.NFTokenID?.slice(0, 20)}...
-                  </p>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
