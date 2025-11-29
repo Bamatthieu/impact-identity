@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext';
+import { showToast } from '../components/Toast';
 
 // Fix pour les icônes Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -81,12 +82,12 @@ export default function MissionsMap() {
   const handleApply = async (missionId) => {
     try {
       await api.applyToMission(missionId, applicationMessage);
-      alert('Candidature envoyée avec succès !');
+      showToast('✅ Candidature envoyée avec succès !', 'success');
       setApplyingTo(null);
       setApplicationMessage('');
       loadData();
     } catch (error) {
-      alert(error.response?.data?.error || 'Erreur lors de la candidature');
+      showToast(error.response?.data?.error || 'Erreur lors de la candidature', 'error');
     }
   };
 
@@ -106,58 +107,64 @@ export default function MissionsMap() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="flex items-center justify-center h-screen" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      {/* Header */}
-      <div className="bg-white shadow-sm p-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">🗺️ Missions près de vous</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-500">{filteredMissions.length} missions disponibles</span>
+    <div className="h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
+      {/* Header simplifié et moderne */}
+      <div className="bg-white/10 backdrop-blur-lg border-b border-white/20 p-4 shadow-xl">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-white">🗺️ Missions près de vous</h1>
+            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
+              <span className="text-white font-semibold">{filteredMissions.length} missions</span>
+            </div>
           </div>
-        </div>
-        
-        {/* Filtres par catégorie */}
-        <div className="max-w-7xl mx-auto mt-4 flex gap-2 flex-wrap">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              !selectedCategory ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Toutes
-          </button>
-          {categories.map((cat) => (
+          
+          {/* Filtres par catégorie - Plus compacts et modernes */}
+          <div className="flex gap-2 flex-wrap">
             <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
-                selectedCategory === cat.id
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                !selectedCategory 
+                  ? 'bg-white text-gray-900 shadow-lg scale-105' 
+                  : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/20'
               }`}
-              style={selectedCategory === cat.id ? { backgroundColor: cat.color } : {}}
             >
-              {cat.icon} {cat.name}
+              Toutes
             </button>
-          ))}
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1 ${
+                  selectedCategory === cat.id
+                    ? 'text-white shadow-lg scale-105'
+                    : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/20'
+                }`}
+                style={selectedCategory === cat.id ? { backgroundColor: cat.color } : {}}
+              >
+                <span className="text-base">{cat.icon}</span>
+                <span>{cat.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Map & Sidebar */}
-      <div className="flex-1 flex">
-        {/* Carte */}
-        <div className="flex-1 relative">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Carte - avec coins arrondis et ombre */}
+        <div className="flex-1 relative m-4 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
           <MapContainer
             center={userLocation}
             zoom={12}
             style={{ height: '100%', width: '100%' }}
+            className="rounded-2xl"
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -173,23 +180,29 @@ export default function MissionsMap() {
                 <Marker
                   key={mission.id}
                   position={[mission.location.lat, mission.location.lng]}
-                  icon={createCategoryIcon(category?.color || '#666')}
+                  icon={createCategoryIcon(category?.color || '#14b8a6')}
                   eventHandlers={{
                     click: () => setSelectedMission(mission)
                   }}
                 >
                   <Popup>
-                    <div className="p-2 min-w-[200px]">
-                      <h3 className="font-bold text-lg">{mission.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{mission.organization?.name}</p>
-                      <p className="text-sm mt-2">📍 {mission.location.address}</p>
-                      <p className="text-sm">📅 {formatDate(mission.date)}</p>
-                      <p className="text-sm">🏆 {mission.reward} points</p>
+                    <div className="p-3 min-w-[250px]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">{category?.icon || '📍'}</span>
+                        <h3 className="font-bold text-lg flex-1">{mission.title}</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">🏢 {mission.organization?.name}</p>
+                      <div className="space-y-1 mb-3 text-sm text-gray-700">
+                        <p>📍 {mission.location.address.slice(0, 40)}...</p>
+                        <p>⏱️ {mission.duration} min</p>
+                        <p className="font-semibold text-teal-600">🏆 {mission.points || mission.reward} points</p>
+                      </div>
                       <button
                         onClick={() => setSelectedMission(mission)}
-                        className="mt-3 w-full bg-green-600 text-white py-2 rounded-lg text-sm hover:bg-green-700"
+                        className="mt-2 w-full text-white py-2 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all"
+                        style={{ background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' }}
                       >
-                        Voir détails
+                        Voir détails →
                       </button>
                     </div>
                   </Popup>
@@ -199,82 +212,87 @@ export default function MissionsMap() {
           </MapContainer>
         </div>
 
-        {/* Sidebar - Détail de la mission */}
+        {/* Sidebar - Détail de la mission - Design moderne */}
         {selectedMission && (
-          <div className="w-96 bg-white shadow-lg overflow-y-auto">
+          <div className="w-[420px] bg-white/10 backdrop-blur-xl border-l border-white/20 shadow-2xl overflow-y-auto m-4 mr-4 rounded-2xl">
             <div className="p-6">
               <button
                 onClick={() => setSelectedMission(null)}
-                className="text-gray-500 hover:text-gray-700 mb-4"
+                className="text-teal-300 hover:text-teal-200 mb-4 flex items-center gap-2 font-medium"
               >
                 ← Retour à la carte
               </button>
 
-              <div 
-                className="w-full h-2 rounded mb-4"
-                style={{ backgroundColor: selectedMission.category?.color }}
-              ></div>
+              {/* Badge catégorie moderne */}
+              <div className="mb-4">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border-2 text-white"
+                  style={{ 
+                    backgroundColor: `${selectedMission.category?.color}40`,
+                    borderColor: selectedMission.category?.color
+                  }}
+                >
+                  <span className="text-xl">{selectedMission.category?.icon}</span>
+                  <span>{selectedMission.category?.name}</span>
+                </span>
+              </div>
 
-              <span className="inline-block px-3 py-1 rounded-full text-sm font-medium mb-3"
-                style={{ 
-                  backgroundColor: `${selectedMission.category?.color}20`,
-                  color: selectedMission.category?.color 
-                }}
-              >
-                {selectedMission.category?.icon} {selectedMission.category?.name}
-              </span>
-
-              <h2 className="text-2xl font-bold text-gray-900">{selectedMission.title}</h2>
+              <h2 className="text-3xl font-bold text-white mb-3">{selectedMission.title}</h2>
               
-              <p className="text-gray-600 mt-2 flex items-center">
-                <span className="text-xl mr-2">🏢</span>
-                {selectedMission.organization?.name}
-              </p>
+              <div className="flex items-center gap-2 text-teal-200 mb-6">
+                <span className="text-xl">🏢</span>
+                <span className="font-medium">{selectedMission.organization?.name}</span>
+              </div>
 
-              <div className="mt-6 space-y-3">
-                <div className="flex items-center text-gray-700">
-                  <span className="text-xl mr-3">📍</span>
-                  <span>{selectedMission.location?.address}</span>
+              {/* Informations principales - Cards modernes */}
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3 border border-white/10">
+                  <span className="text-2xl">📍</span>
+                  <span className="text-white/90 text-sm flex-1">{selectedMission.location?.address}</span>
                 </div>
-                <div className="flex items-center text-gray-700">
-                  <span className="text-xl mr-3">📅</span>
-                  <span>{formatDate(selectedMission.date)}</span>
+                <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3 border border-white/10">
+                  <span className="text-2xl">📅</span>
+                  <span className="text-white/90 text-sm flex-1">{formatDate(selectedMission.date)}</span>
                 </div>
-                <div className="flex items-center text-gray-700">
-                  <span className="text-xl mr-3">⏱️</span>
-                  <span>{selectedMission.duration} minutes</span>
-                </div>
-                <div className="flex items-center text-gray-700">
-                  <span className="text-xl mr-3">👥</span>
-                  <span>{selectedMission.applicationsCount || 0} / {selectedMission.maxParticipants} participants</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl p-3 border border-white/10">
+                    <span className="text-xl">⏱️</span>
+                    <span className="text-white/90 text-sm">{selectedMission.duration} min</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl p-3 border border-white/10">
+                    <span className="text-xl">👥</span>
+                    <span className="text-white/90 text-sm">{selectedMission.applicationsCount || 0}/{selectedMission.maxParticipants}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-green-50 rounded-xl">
-                <div className="flex items-center justify-between">
-                  <span className="text-green-800 font-medium">Récompense</span>
-                  <span className="text-2xl font-bold text-green-600">
-                    🏆 {selectedMission.reward} pts
+              {/* Récompense - Card gradient attractive */}
+              <div className="mb-6 p-5 rounded-2xl shadow-xl" style={{ background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-semibold text-sm">RÉCOMPENSE</span>
+                  <span className="text-3xl font-bold text-white">
+                    {selectedMission.points || selectedMission.reward} pts
                   </span>
                 </div>
-                <p className="text-green-700 text-sm mt-1">
-                  + NFT de certification blockchain
-                </p>
+                <div className="flex items-center gap-2 text-white/90 text-sm">
+                  <span>🏆</span>
+                  <span>Points d'impact + NFT certifié</span>
+                </div>
               </div>
 
-              <div className="mt-6">
-                <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-                <p className="text-gray-600">{selectedMission.description}</p>
+              {/* Description */}
+              <div className="mb-6 bg-white/5 rounded-xl p-4 border border-white/10">
+                <h3 className="font-bold text-white mb-3 text-lg">📋 Description</h3>
+                <p className="text-white/80 leading-relaxed text-sm">{selectedMission.description}</p>
               </div>
 
               {selectedMission.requirements && (
-                <div className="mt-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Prérequis</h3>
-                  <p className="text-gray-600">{selectedMission.requirements}</p>
+                <div className="mb-6 bg-white/5 rounded-xl p-4 border border-white/10">
+                  <h3 className="font-bold text-white mb-3 text-lg">✅ Prérequis</h3>
+                  <p className="text-white/80 leading-relaxed text-sm">{selectedMission.requirements}</p>
                 </div>
               )}
 
-              {/* Bouton de candidature */}
+              {/* Bouton de candidature - Design moderne */}
               {isAuthenticated && isClient && (
                 <div className="mt-6">
                   {applyingTo === selectedMission.id ? (
@@ -283,19 +301,20 @@ export default function MissionsMap() {
                         value={applicationMessage}
                         onChange={(e) => setApplicationMessage(e.target.value)}
                         placeholder="Message de motivation (optionnel)..."
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl focus:ring-2 focus:ring-teal-400 text-white placeholder-white/50"
                         rows={3}
                       />
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleApply(selectedMission.id)}
-                          className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700"
+                          className="flex-1 text-white py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
+                          style={{ background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' }}
                         >
-                          Confirmer ma candidature
+                          ✅ Confirmer ma candidature
                         </button>
                         <button
                           onClick={() => setApplyingTo(null)}
-                          className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                          className="px-4 py-3 bg-white/10 text-white/90 rounded-xl hover:bg-white/15 border border-white/20 font-semibold"
                         >
                           Annuler
                         </button>
@@ -304,7 +323,8 @@ export default function MissionsMap() {
                   ) : (
                     <button
                       onClick={() => setApplyingTo(selectedMission.id)}
-                      className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                      className="w-full text-white py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-2xl hover:scale-105 text-lg"
+                      style={{ background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' }}
                     >
                       ✋ Participer à cette mission
                     </button>
@@ -313,11 +333,12 @@ export default function MissionsMap() {
               )}
 
               {!isAuthenticated && (
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg text-center">
-                  <p className="text-gray-600 mb-3">Connectez-vous pour participer</p>
+                <div className="mt-6 p-5 bg-white/5 rounded-xl text-center border border-white/20">
+                  <p className="text-white/80 mb-4 font-medium">Connectez-vous pour participer</p>
                   <a
                     href="/login"
-                    className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700"
+                    className="inline-block text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                    style={{ background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' }}
                   >
                     Se connecter
                   </a>

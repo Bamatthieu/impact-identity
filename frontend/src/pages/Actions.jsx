@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getActions, getActionTypes, getUsers, createAction, getUserActions } from '../api'
 import { useAuth } from '../context/AuthContext'
+import { showToast } from '../components/Toast'
 
 function Actions({ userOnly = false }) {
   const { user, isAdmin } = useAuth()
@@ -50,11 +51,12 @@ function Actions({ userOnly = false }) {
         actionTypeId: parseInt(formData.actionTypeId),
         description: formData.description
       })
+      showToast('✅ Action soumise avec succès ! En attente de validation', 'success')
       setShowModal(false)
       setFormData({ actionTypeId: '', description: '' })
       loadData()
     } catch (error) {
-      alert(error.response?.data?.error || 'Erreur lors de la soumission')
+      showToast(error.response?.data?.error || 'Erreur lors de la soumission', 'error')
     }
   }
 

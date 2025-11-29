@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getUsers, createUser, getUserNFTs } from '../api'
+import { showToast } from '../components/Toast'
 
 function Users() {
   const [users, setUsers] = useState([])
@@ -30,11 +31,12 @@ function Users() {
     setCreating(true)
     try {
       await createUser(formData)
+      showToast('✅ Utilisateur créé avec succès !', 'success')
       setFormData({ name: '', email: '' })
       setShowModal(false)
       loadUsers()
     } catch (error) {
-      alert(error.response?.data?.error || 'Erreur lors de la création')
+      showToast(error.response?.data?.error || 'Erreur lors de la création', 'error')
     } finally {
       setCreating(false)
     }

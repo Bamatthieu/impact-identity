@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
 import { getPendingActions, validateAction, rejectAction, getXRPLStatus } from '../api'
+import { showToast, ConfirmModal } from '../components/Toast'
 
 function Admin() {
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [actionToValidate, setActionToValidate] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [actionToReject, setActionToReject] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
   const [pendingActions, setPendingActions] = useState([])
   const [xrplStatus, setXrplStatus] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -27,33 +33,47 @@ function Admin() {
   }
 
   const handleValidate = async (actionId) => {
-    if (!confirm('Valider cette action ? Un NFT sera minté pour l\'utilisateur.')) return
-    
-    setProcessing(actionId)
+    setActionToValidate(actionId);
+    setShowConfirmModal(true);
+  }
+
+  const confirmValidate = async () => {
+    setProcessing(actionToValidate)
     try {
-      const res = await validateAction(actionId)
-      alert(`✅ Action validée ! NFT minté avec succès.\n\nPoints attribués: ${res.data.data.pointsAwarded}`)
+      const res = await validateAction(actionToValidate)
+      showToast(`✅ Action validée ! NFT minté • ${res.data.data.pointsAwarded} points attribués`, 'success')
       loadData()
     } catch (error) {
-      alert('❌ Erreur: ' + (error.response?.data?.error || error.message))
+      showToast(error.response?.data?.error || error.message, 'error')
     } finally {
       setProcessing(null)
+      setActionToValidate(null);
     }
   }
 
   const handleReject = async (actionId) => {
-    const reason = prompt('Raison du rejet:')
-    if (!reason) return
+    setActionToReject(actionId);
+    setShowRejectModal(true);
+  }
 
-    setProcessing(actionId)
+  const confirmReject = async () => {
+    if (!rejectReason.trim()) {
+      showToast('Veuillez indiquer une raison', 'warning');
+      return;
+    }
+
+    setProcessing(actionToReject)
     try {
-      await rejectAction(actionId, reason)
-      alert('Action rejetée')
+      await rejectAction(actionToReject, rejectReason)
+      showToast('Action rejetée', 'success')
       loadData()
+      setRejectReason('');
     } catch (error) {
-      alert('❌ Erreur: ' + (error.response?.data?.error || error.message))
+      showToast(error.response?.data?.error || error.message, 'error')
     } finally {
       setProcessing(null)
+      setActionToReject(null);
+      setShowRejectModal(false);
     }
   }
 
@@ -162,6 +182,49 @@ function Admin() {
           <li>4. L'utilisateur reçoit ses points et peut débloquer des badges</li>
         </ul>
       </div>
+
+      {/* Modal de confirmation de validation */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => { setShowConfirmModal(false); setActionToValidate(null); }}
+        onConfirm={confirmValidate}
+        title="Valider cette action ?"
+        message="Un NFT sera minté sur la blockchain XRPL pour cet utilisateur. Cette action est irréversible."
+        confirmText="Valider et minter le NFT"
+        confirmColor="green"
+      />
+
+      {/* Modal de rejet personnalisé */}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowRejectModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 animate-scale-in">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Rejeter l'action</h3>
+            <p className="text-gray-600 mb-4">Indiquez la raison du rejet (sera envoyée à l'utilisateur)</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Ex: Photo non conforme, activité déjà validée..."
+              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 mb-4"
+              rows={3}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowRejectModal(false); setRejectReason(''); setActionToReject(null); }}
+                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmReject}
+                className="flex-1 py-3 px-4 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+              >
+                Rejeter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

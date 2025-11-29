@@ -47,94 +47,94 @@ export default function Wallet() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-400 border-t-transparent"></div>
       </div>
     );
   }
 
   if (!user?.walletAddress) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen p-6" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
         <div className="max-w-2xl mx-auto text-center py-20">
           <div className="text-6xl mb-4">💳</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Aucun wallet</h1>
-          <p className="text-gray-600">Votre compte n'a pas de wallet XRPL associé.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Aucun wallet</h1>
+          <p className="text-white/80">Votre compte n'a pas de wallet XRPL associé.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">💳 Mon Wallet</h1>
-          <p className="text-gray-600">Gérez vos XRP et NFTs sur la blockchain XRPL</p>
+          <h1 className="text-3xl font-bold text-white">💳 Mon Wallet</h1>
+          <p className="text-teal-200">Gérez vos XRP et NFTs sur la blockchain XRPL</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">{error}</div>
+          <div className="bg-red-500/20 text-red-300 p-4 rounded-lg mb-6 border border-red-400/30">{error}</div>
         )}
 
-        {/* Carte principale du wallet */}
-        <div className="bg-gradient-to-br from-blue-600 to-purple-700 rounded-2xl p-6 text-white mb-6 shadow-xl">
+        {/* Carte principale du wallet - Gradient moderne */}
+        <div className="rounded-2xl p-6 text-white mb-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' }}>
           <div className="flex justify-between items-start mb-6">
             <div>
-              <p className="text-blue-200 text-sm">Solde disponible</p>
+              <p className="text-white/80 text-sm font-medium">Solde disponible</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold">
+                <span className="text-5xl font-bold">
                   {wallet?.xrpBalance?.toFixed(2) || '0.00'}
                 </span>
-                <span className="text-xl">XRP</span>
+                <span className="text-2xl font-semibold">XRP</span>
               </div>
             </div>
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+              className="p-3 bg-white/20 rounded-xl hover:bg-white/30 transition-all shadow-lg"
             >
-              <span className={`text-xl ${refreshing ? 'animate-spin' : ''}`}>🔄</span>
+              <span className={`text-2xl ${refreshing ? 'animate-spin' : ''}`}>🔄</span>
             </button>
           </div>
           
-          <div className="bg-white/10 rounded-lg p-3">
-            <p className="text-blue-200 text-xs mb-1">Adresse du wallet</p>
+          <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
+            <p className="text-white/80 text-xs mb-2 font-medium">Adresse du wallet</p>
             <p className="font-mono text-sm break-all">{wallet?.address}</p>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 mt-6">
-            <div className="text-center">
+          <div className="grid grid-cols-4 gap-3 mt-6">
+            <div className="text-center bg-white/10 rounded-xl p-3 backdrop-blur-sm">
               <p className="text-2xl font-bold">{wallet?.nftsCount || 0}</p>
-              <p className="text-blue-200 text-sm">NFTs Total</p>
+              <p className="text-white/80 text-xs mt-1">NFTs Total</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-purple-300">
-                {wallet?.nfts?.filter(n => n.metadata?.type === 'citizen_badge').length || 0}
+            <div className="text-center bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+              <p className="text-2xl font-bold">
+                {wallet?.nfts?.filter(n => n.metadata?.type === 'citizen_badge' || n.metadata?.t === 'badge').length || 0}
               </p>
-              <p className="text-blue-200 text-sm">Badges</p>
+              <p className="text-white/80 text-xs mt-1">Badges</p>
             </div>
-            <div className="text-center">
+            <div className="text-center bg-white/10 rounded-xl p-3 backdrop-blur-sm">
               <p className="text-2xl font-bold text-green-300">+{wallet?.totalReceived?.toFixed(2) || 0}</p>
-              <p className="text-blue-200 text-sm">Reçu</p>
+              <p className="text-white/80 text-xs mt-1">Reçu</p>
             </div>
-            <div className="text-center">
+            <div className="text-center bg-white/10 rounded-xl p-3 backdrop-blur-sm">
               <p className="text-2xl font-bold text-red-300">-{wallet?.totalSent?.toFixed(2) || 0}</p>
-              <p className="text-blue-200 text-sm">Envoyé</p>
+              <p className="text-white/80 text-xs mt-1">Envoyé</p>
             </div>
           </div>
         </div>
 
         {/* NFTs */}
         {wallet?.nfts?.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">🏆 Mes NFTs ({wallet.nfts.length})</h2>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">🏆 Mes NFTs ({wallet.nfts.length})</h2>
             
             {/* Badges NFT (Niveaux Citoyens) */}
             {wallet.nfts.filter(nft => nft.metadata?.type === 'citizen_badge' || nft.metadata?.t === 'badge').length > 0 && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-purple-700 mb-3">🏅 Badges de Niveau</h3>
+                <h3 className="text-lg font-semibold text-purple-300 mb-3">🏅 Badges de Niveau</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   {wallet.nfts.filter(nft => nft.metadata?.type === 'citizen_badge' || nft.metadata?.t === 'badge').map((nft, index) => {
                     // Support à la fois l'ancien format (type, levelName) et le nouveau (t, lvl)
@@ -149,45 +149,45 @@ export default function Wallet() {
                     return (
                     <div 
                       key={nft.NFTokenID || index} 
-                      className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white rounded-xl p-4 hover:shadow-lg transition-all"
+                      className="bg-white/5 border border-white/20 rounded-xl p-4 hover:bg-white/10 hover:shadow-xl transition-all"
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <div 
-                          className="w-14 h-14 rounded-full flex items-center justify-center text-3xl"
-                          style={{ backgroundColor: levelColor + '20', border: `2px solid ${levelColor}` }}
+                          className="w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-lg"
+                          style={{ backgroundColor: levelColor + '40', border: `2px solid ${levelColor}` }}
                         >
                           {levelIcon}
                         </div>
                         <div>
-                          <p className="font-bold text-lg text-gray-900">
+                          <p className="font-bold text-lg text-white">
                             {levelName}
                           </p>
-                          <p className="text-sm text-purple-600">
+                          <p className="text-sm text-purple-300">
                             Badge NFT non-transférable
                           </p>
                         </div>
                       </div>
-                      <div className="bg-purple-50 rounded-lg p-3 text-sm">
+                      <div className="bg-white/5 rounded-lg p-3 text-sm border border-white/10">
                         {minPoints > 0 && (
                           <div className="flex justify-between mb-1">
-                            <span className="text-gray-500">Points requis</span>
-                            <span className="font-semibold text-purple-600">{minPoints} pts</span>
+                            <span className="text-white/60">Points requis</span>
+                            <span className="font-semibold text-purple-300">{minPoints} pts</span>
                           </div>
                         )}
                         <div className="flex justify-between mb-1">
-                          <span className="text-gray-500">Points au moment</span>
-                          <span className="font-semibold text-green-600">{totalPoints} pts</span>
+                          <span className="text-white/60">Points au moment</span>
+                          <span className="font-semibold text-teal-300">{totalPoints} pts</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Obtenu le</span>
-                          <span className="text-gray-700">
+                          <span className="text-white/60">Obtenu le</span>
+                          <span className="text-white/90">
                             {earnedAt 
                               ? new Date(earnedAt).toLocaleDateString('fr-FR')
                               : '-'}
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-400 mt-2 font-mono truncate">
+                      <p className="text-xs text-white/40 mt-2 font-mono truncate">
                         ID: {nft.NFTokenID?.slice(0, 20)}...
                       </p>
                     </div>
@@ -198,22 +198,22 @@ export default function Wallet() {
             )}
             
             {/* Missions NFT */}
-            {wallet.nfts.filter(nft => nft.metadata?.type !== 'citizen_badge').length > 0 && (
+            {wallet.nfts.filter(nft => nft.metadata?.type !== 'citizen_badge' && nft.metadata?.t !== 'badge').length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-blue-700 mb-3">🎖️ NFTs de Missions</h3>
+                <h3 className="text-lg font-semibold text-blue-300 mb-3">🎖️ NFTs de Missions</h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {wallet.nfts.filter(nft => nft.metadata?.type !== 'citizen_badge').map((nft, index) => (
-                    <div key={nft.NFTokenID || index} className="border rounded-xl p-4 hover:shadow-md transition-shadow">
+                  {wallet.nfts.filter(nft => nft.metadata?.type !== 'citizen_badge' && nft.metadata?.t !== 'badge').map((nft, index) => (
+                    <div key={nft.NFTokenID || index} className="bg-white/5 border border-white/20 rounded-xl p-4 hover:bg-white/10 hover:shadow-xl transition-all">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-3xl">{nft.metadata?.citizenIcon || '🎖️'}</span>
                         <div>
-                          <p className="font-semibold text-gray-900">
+                          <p className="font-semibold text-white">
                             {nft.metadata?.missionTitle || 'Mission Impact'}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-white/70">
                             {nft.metadata?.citizenLevel || 'Certificat'}
                             {nft.metadata?.isVolunteer && (
-                              <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full">
+                              <span className="ml-2 px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-400/30">
                                 Bénévole 💜
                               </span>
                             )}
@@ -221,20 +221,20 @@ export default function Wallet() {
                         </div>
                       </div>
                       {nft.metadata && (
-                        <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                        <div className="bg-white/5 rounded-lg p-3 text-sm border border-white/10">
                           <div className="flex justify-between mb-1">
-                            <span className="text-gray-500">Points gagnés</span>
-                            <span className="font-semibold text-green-600">+{nft.metadata.earnedPoints || 0} pts</span>
+                            <span className="text-white/60">Points gagnés</span>
+                            <span className="font-semibold text-teal-300">+{nft.metadata.earnedPoints || 0} pts</span>
                           </div>
                           {nft.metadata.rewardXRP > 0 && (
                             <div className="flex justify-between mb-1">
-                              <span className="text-gray-500">XRP reçus</span>
-                              <span className="font-semibold text-blue-600">+{nft.metadata.rewardXRP} XRP</span>
+                              <span className="text-white/60">XRP reçus</span>
+                              <span className="font-semibold text-blue-300">+{nft.metadata.rewardXRP} XRP</span>
                             </div>
                           )}
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Date</span>
-                            <span className="text-gray-700">
+                            <span className="text-white/60">Date</span>
+                            <span className="text-white/90">
                               {nft.metadata.completedAt 
                                 ? new Date(nft.metadata.completedAt).toLocaleDateString('fr-FR')
                                 : '-'}
@@ -242,7 +242,7 @@ export default function Wallet() {
                           </div>
                         </div>
                       )}
-                      <p className="text-xs text-gray-400 mt-2 font-mono truncate">
+                      <p className="text-xs text-white/40 mt-2 font-mono truncate">
                         ID: {nft.NFTokenID?.slice(0, 20)}...
                       </p>
                     </div>
@@ -254,41 +254,41 @@ export default function Wallet() {
         )}
 
         {/* Transactions */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">📜 Historique des transactions</h2>
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6">
+          <h2 className="text-xl font-bold text-white mb-4">📜 Historique des transactions</h2>
           
           {transactions.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-4xl mb-4">📭</p>
-              <p className="text-gray-600">Aucune transaction pour le moment</p>
-              <p className="text-gray-400 text-sm">Complétez des missions pour recevoir des XRP !</p>
+              <p className="text-white/80">Aucune transaction pour le moment</p>
+              <p className="text-white/60 text-sm">Complétez des missions pour recevoir des XRP !</p>
             </div>
           ) : (
             <div className="space-y-3">
               {transactions.map((tx) => {
                 const isReceived = tx.to === wallet?.address;
                 return (
-                  <div key={tx.id} className="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50">
+                  <div key={tx.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/20 rounded-xl hover:bg-white/10 transition-all">
                     <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        isReceived ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                        isReceived ? 'bg-teal-500/20 text-teal-300 border border-teal-400/30' : 'bg-red-500/20 text-red-300 border border-red-400/30'
                       }`}>
                         {isReceived ? '↓' : '↑'}
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-white">
                           {tx.missionTitle || tx.type}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-white/70">
                           {isReceived ? `De: ${tx.fromName}` : `À: ${tx.toName}`}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-white/50">
                           {new Date(tx.createdAt).toLocaleString('fr-FR')}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-lg font-bold ${isReceived ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className={`text-lg font-bold ${isReceived ? 'text-teal-300' : 'text-red-300'}`}>
                         {isReceived ? '+' : '-'}{tx.amount} {tx.currency}
                       </p>
                       {tx.txHash && (
@@ -296,7 +296,7 @@ export default function Wallet() {
                           href={`https://testnet.xrpl.org/transactions/${tx.txHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-500 hover:underline"
+                          className="text-xs text-blue-400 hover:text-blue-300 hover:underline"
                         >
                           Voir sur XRPL →
                         </a>

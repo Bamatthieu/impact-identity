@@ -166,38 +166,38 @@ export default function CreateMission() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
       {/* Toast notification */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-700 mb-4">
+          <button onClick={() => navigate(-1)} className="text-teal-300 hover:text-teal-200 mb-4 font-medium">
             ← Retour
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Créer une mission</h1>
-          <p className="text-gray-600">Mobilisez des bénévoles pour votre cause</p>
+          <h1 className="text-3xl font-bold text-white">Créer une mission</h1>
+          <p className="text-teal-200">Mobilisez des bénévoles pour votre cause</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-8">
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Option Bénévole */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4">
+            <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-2 border-purple-400/50 rounded-xl p-4">
               <label className="flex items-center gap-4 cursor-pointer">
                 <input
                   type="checkbox"
                   name="isVolunteer"
                   checked={formData.isVolunteer}
                   onChange={handleChange}
-                  className="w-6 h-6 text-purple-600 rounded focus:ring-purple-500"
+                  className="w-6 h-6 text-purple-400 rounded focus:ring-purple-400"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">💜</span>
-                    <span className="font-bold text-purple-800">Mission 100% Bénévole</span>
-                    <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">x2 Points</span>
+                    <span className="font-bold text-purple-300">Mission 100% Bénévole</span>
+                    <span className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full">x2 Points</span>
                   </div>
-                  <p className="text-sm text-purple-600 mt-1">
+                  <p className="text-sm text-purple-200 mt-1">
                     Les participants reçoivent 2x plus de points et NFTs, mais 0 XRP
                   </p>
                 </div>
@@ -206,7 +206,7 @@ export default function CreateMission() {
 
             {/* Titre */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Titre de la mission *
               </label>
               <input
@@ -214,7 +214,7 @@ export default function CreateMission() {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-teal-400 text-white placeholder-white/50"
                 placeholder="Ex: Nettoyage du parc central"
                 required
               />
@@ -222,7 +222,7 @@ export default function CreateMission() {
 
             {/* Catégorie */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Catégorie *
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -231,10 +231,10 @@ export default function CreateMission() {
                     key={cat.id}
                     className={`cursor-pointer p-3 border rounded-lg text-center transition-all ${
                       formData.categoryId === String(cat.id)
-                        ? 'border-2 shadow-md'
-                        : 'hover:border-gray-400'
+                        ? 'border-2 shadow-xl scale-105'
+                        : 'border-white/20 bg-white/5 hover:bg-white/10'
                     }`}
-                    style={formData.categoryId === String(cat.id) ? { borderColor: cat.color, backgroundColor: `${cat.color}10` } : {}}
+                    style={formData.categoryId === String(cat.id) ? { borderColor: cat.color, backgroundColor: `${cat.color}30` } : {}}
                   >
                     <input
                       type="radio"
@@ -246,7 +246,7 @@ export default function CreateMission() {
                       required
                     />
                     <div className="text-2xl mb-1">{cat.icon}</div>
-                    <div className="text-sm font-medium">{cat.name}</div>
+                    <div className="text-sm font-medium text-white">{cat.name}</div>
                   </label>
                 ))}
               </div>
@@ -254,7 +254,7 @@ export default function CreateMission() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Description *
               </label>
               <textarea
@@ -262,7 +262,7 @@ export default function CreateMission() {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-teal-400 text-white placeholder-white/50"
                 placeholder="Décrivez la mission en détail..."
                 required
               />
@@ -270,7 +270,7 @@ export default function CreateMission() {
 
             {/* Localisation */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Adresse *
               </label>
               <div className="flex gap-2">
@@ -279,20 +279,20 @@ export default function CreateMission() {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  className="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-teal-400 text-white placeholder-white/50"
                   placeholder="Ex: 1 rue de la Paix, 75001 Paris"
                   required
                 />
                 <button
                   type="button"
                   onClick={handleAddressSearch}
-                  className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  className="px-4 py-3 bg-white/10 text-white/90 rounded-lg hover:bg-white/15 border border-white/20"
                 >
                   🔍 Rechercher
                 </button>
               </div>
               {formData.lat && formData.lng && (
-                <p className="mt-2 text-sm text-green-600">
+                <p className="mt-2 text-sm text-teal-300">
                   ✅ Coordonnées trouvées: {formData.lat}, {formData.lng}
                 </p>
               )}
@@ -301,7 +301,7 @@ export default function CreateMission() {
             {/* Date et heure */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/90 mb-2">
                   Date *
                 </label>
                 <input
@@ -310,12 +310,12 @@ export default function CreateMission() {
                   value={formData.date}
                   onChange={handleChange}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-teal-400 text-white"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/90 mb-2">
                   Heure *
                 </label>
                 <input
@@ -323,7 +323,7 @@ export default function CreateMission() {
                   name="time"
                   value={formData.time}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-teal-400 text-white"
                   required
                 />
               </div>
@@ -332,25 +332,25 @@ export default function CreateMission() {
             {/* Durée et participants */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/90 mb-2">
                   Durée (minutes)
                 </label>
                 <select
                   name="duration"
                   value={formData.duration}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-teal-400 text-white"
                 >
-                  <option value="30">30 min</option>
-                  <option value="60">1 heure</option>
-                  <option value="90">1h30</option>
-                  <option value="120">2 heures</option>
-                  <option value="180">3 heures</option>
-                  <option value="240">4 heures</option>
+                  <option value="30" className="bg-gray-800">30 min</option>
+                  <option value="60" className="bg-gray-800">1 heure</option>
+                  <option value="90" className="bg-gray-800">1h30</option>
+                  <option value="120" className="bg-gray-800">2 heures</option>
+                  <option value="180" className="bg-gray-800">3 heures</option>
+                  <option value="240" className="bg-gray-800">4 heures</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/90 mb-2">
                   Participants max
                 </label>
                 <input
@@ -360,15 +360,15 @@ export default function CreateMission() {
                   onChange={handleChange}
                   min="1"
                   max="100"
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-teal-400 text-white"
                 />
               </div>
             </div>
 
             {/* Récompense XRP */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Récompense XRP (0-100) {formData.isVolunteer && <span className="text-purple-600">(Désactivé - Mission bénévole)</span>}
+              <label className="block text-sm font-medium text-white/90 mb-2">
+                Récompense XRP (0-100) {formData.isVolunteer && <span className="text-purple-300">(Désactivé - Mission bénévole)</span>}
               </label>
               <div className="flex items-center gap-4">
                 <input
@@ -382,16 +382,16 @@ export default function CreateMission() {
                   disabled={formData.isVolunteer}
                   className={`flex-1 ${formData.isVolunteer ? 'opacity-50' : ''}`}
                 />
-                <span className={`text-2xl font-bold w-24 text-center ${formData.isVolunteer ? 'text-gray-400' : 'text-blue-600'}`}>
+                <span className={`text-2xl font-bold w-24 text-center ${formData.isVolunteer ? 'text-white/40' : 'text-blue-300'}`}>
                   {effectiveXRP} XRP
                 </span>
               </div>
-              <div className={`mt-3 p-3 rounded-lg ${formData.isVolunteer ? 'bg-purple-50' : 'bg-green-50'}`}>
-                <p className={`text-sm ${formData.isVolunteer ? 'text-purple-700' : 'text-green-700'}`}>
+              <div className={`mt-3 p-4 rounded-lg border ${formData.isVolunteer ? 'bg-purple-500/20 border-purple-400/30' : 'bg-teal-500/20 border-teal-400/30'}`}>
+                <p className={`text-sm font-medium ${formData.isVolunteer ? 'text-purple-200' : 'text-teal-200'}`}>
                   <strong>Points gagnés :</strong> {calculatedPoints} pt{calculatedPoints > 1 ? 's' : ''} 
                   {formData.isVolunteer && <span className="ml-1">(x2 bonus bénévole !)</span>}
                 </p>
-                <p className={`text-xs mt-1 ${formData.isVolunteer ? 'text-purple-600' : 'text-green-600'}`}>
+                <p className={`text-xs mt-1 ${formData.isVolunteer ? 'text-purple-300' : 'text-teal-300'}`}>
                   {formData.isVolunteer 
                     ? `Les participants recevront ${calculatedPoints} points (2x) + un NFT spécial bénévole 💜`
                     : `Les participants recevront ${calculatedPoints} points + ${formData.rewardXRP} XRP + un NFT de certification`
@@ -402,7 +402,7 @@ export default function CreateMission() {
 
             {/* Prérequis */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Prérequis (optionnel)
               </label>
               <textarea
@@ -410,7 +410,7 @@ export default function CreateMission() {
                 value={formData.requirements}
                 onChange={handleChange}
                 rows={2}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-teal-400 text-white placeholder-white/50"
                 placeholder="Ex: Prévoir des gants et des chaussures fermées..."
               />
             </div>
@@ -419,11 +419,12 @@ export default function CreateMission() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
+              className={`w-full py-4 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-2xl text-lg ${
+                loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
               }`}
+              style={{ background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' }}
             >
-              {loading ? 'Création...' : '🚀 Publier la mission'}
+              {loading ? '⏳ Création...' : '🚀 Publier la mission'}
             </button>
           </form>
         </div>

@@ -4,8 +4,17 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
   min-height: 100vh;
+}
+
+/* Thème principal avec dégradé vert/turquoise/bleu */
+:root {
+  --gradient-primary: linear-gradient(135deg, #34d399 0%, #14b8a6 50%, #3b82f6 100%);
+  --gradient-card: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(20, 184, 166, 0.1) 50%, rgba(59, 130, 246, 0.1) 100%);
+  --color-primary: #14b8a6;
+  --color-secondary: #34d399;
+  --color-accent: #3b82f6;
 }
 
 .card {
