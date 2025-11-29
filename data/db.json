@@ -1,0 +1,441 @@
+{
+  "users": [
+    {
+      "id": "admin-001",
+      "name": "Administrateur",
+      "email": "admin@impact-identity.com",
+      "password": "$2a$10$w/yWpg6cqjgA.1eC7dwcjeNLhHamtQuNXkvLA6NWuU6l55nfudst.",
+      "role": "admin",
+      "status": "active",
+      "walletAddress": null,
+      "walletSeed": null,
+      "totalPoints": 0,
+      "completedMissions": 0,
+      "badges": [],
+      "createdAt": "2025-11-29T13:09:34.390Z"
+    },
+    {
+      "id": "1764422277386",
+      "name": "Test Org",
+      "email": "test@org.com",
+      "password": "$2a$10$R7gt/GuJCiUTHOf2AUF9w.LlNKCPBCiM9qdCU4/2phi5Cd45ofDY.",
+      "role": "organization",
+      "walletAddress": "rp6qW1PuQkbPsFGHTBcmCh2iETHkPkjsqs",
+      "walletSeed": "sEdTvdrFBx1Mnx3EFtmdXomVLYBZGZc",
+      "organizationType": 1,
+      "siret": null,
+      "sector": null,
+      "description": "Test desc",
+      "phone": null,
+      "address": null,
+      "status": "active",
+      "totalPoints": 0,
+      "completedMissions": 0,
+      "badges": [],
+      "createdAt": "2025-11-29T13:17:57.386Z",
+      "approvedAt": "2025-11-29T13:22:28.366Z",
+      "approvedBy": "admin-001"
+    },
+    {
+      "id": "1764422584345",
+      "name": "ECE",
+      "email": "charlejeanja@gmail.com",
+      "password": "$2a$10$yRPgxzNswheWE0fkxuKFxur1qUgZsjRzgQcPS.BkslYOSMPMtCKlO",
+      "role": "organization",
+      "walletAddress": "rwXu8Gh6em1oFba16vHFErYJktCcYa9Ay5",
+      "walletSeed": "sEd7C2XnpPjLMRwAhVy7Jmx2WBxzdDr",
+      "organizationType": 7,
+      "siret": "67868969678698",
+      "sector": null,
+      "description": "ECE",
+      "phone": null,
+      "address": null,
+      "status": "active",
+      "totalPoints": 0,
+      "completedMissions": 0,
+      "badges": [],
+      "createdAt": "2025-11-29T13:23:04.345Z",
+      "approvedAt": "2025-11-29T13:23:31.347Z",
+      "approvedBy": "admin-001"
+    },
+    {
+      "id": "1764422738152",
+      "name": "Romain Mouchan",
+      "email": "romain.mouchan@edu.ece.fr",
+      "password": "$2a$10$kQ8tCcNJXH9NuRBl07b7iO69nXnl7Yh36CjpP0P5y1bxBgTxd/rji",
+      "role": "client",
+      "walletAddress": "rnKY6sFHncwiUvxwmzgBHxe3HgxjcKwo2o",
+      "walletSeed": "sEd7xCqbqrjUiwXTEfc6vYKCgLW7pAa",
+      "status": "active",
+      "totalPoints": 6,
+      "completedMissions": 3,
+      "badges": [
+        6
+      ],
+      "createdAt": "2025-11-29T13:25:38.152Z"
+    },
+    {
+      "id": "1764422917378",
+      "name": "Mairie",
+      "email": "andrea.mellion@edu.ece.fr",
+      "password": "$2a$10$XEOgY9kzcIi3P3KmVD9S.eJgOhfA/x6UcX2zKPeDUmpdOGw9kZXuC",
+      "role": "organization",
+      "walletAddress": "rUe8yoetfTpwtf8M99AW96MsC2CzGUCCbY",
+      "walletSeed": "sEdT5zhSgXdGp3AHvT5ybP8ZFG3qgHf",
+      "organizationType": 3,
+      "siret": null,
+      "sector": null,
+      "description": "Mairie de Genneviliers",
+      "phone": null,
+      "address": null,
+      "status": "active",
+      "totalPoints": 0,
+      "completedMissions": 0,
+      "badges": [],
+      "createdAt": "2025-11-29T13:28:37.378Z",
+      "approvedAt": "2025-11-29T13:29:06.012Z",
+      "approvedBy": "admin-001"
+    }
+  ],
+  "missions": [
+    {
+      "id": "1764422702601",
+      "organizationId": "1764422584345",
+      "title": "Nettoyage des tables",
+      "description": "Nettoyer",
+      "categoryId": 8,
+      "location": {
+        "lat": 48.8510273,
+        "lng": 2.2885712,
+        "address": "10, Rue Sextius Michel, Quartier de Grenelle, Paris 15e Arrondissement, Paris, Île-de-France, France métropolitaine, 75015, France"
+      },
+      "date": "2025-11-29T16:00:00",
+      "duration": 120,
+      "rewardXRP": 8,
+      "maxParticipants": 1,
+      "skills": [],
+      "requirements": "",
+      "points": 2,
+      "acceptedCount": 1,
+      "status": "completed",
+      "applicationsCount": 1,
+      "assignedTo": null,
+      "createdAt": "2025-11-29T13:25:02.601Z",
+      "completedAt": "2025-11-29T13:26:37.851Z"
+    },
+    {
+      "id": "1764423095764",
+      "organizationId": "1764422917378",
+      "title": "Aide aux jeunes de cité de la street zer",
+      "description": "Aide ",
+      "categoryId": 2,
+      "location": {
+        "lat": 48.8449251,
+        "lng": 2.2198668,
+        "address": "Square Sainte-Clotilde, Résidence Parc de Béarn, Saint-Cloud, Nanterre, Hauts-de-Seine, France métropolitaine, 92210, France"
+      },
+      "date": "2025-11-30T17:00:00",
+      "duration": 180,
+      "rewardXRP": 13,
+      "maxParticipants": 2,
+      "skills": [],
+      "requirements": "",
+      "points": 3,
+      "acceptedCount": 1,
+      "status": "completed",
+      "applicationsCount": 1,
+      "assignedTo": null,
+      "createdAt": "2025-11-29T13:31:35.764Z",
+      "completedAt": "2025-11-29T13:34:31.596Z"
+    },
+    {
+      "id": "1764424421526",
+      "organizationId": "1764422917378",
+      "title": "Eduquer",
+      "description": "Eququer",
+      "categoryId": 3,
+      "location": {
+        "lat": 48.86775,
+        "lng": 2.2111888,
+        "address": "63, Rue de la Procession, Village Mont-Valérien, Rueil-Malmaison, Nanterre, Hauts-de-Seine, Île-de-France, France métropolitaine, 92500, France"
+      },
+      "date": "2025-11-30T17:00:00",
+      "duration": 60,
+      "rewardXRP": 10,
+      "maxParticipants": 1,
+      "skills": [],
+      "requirements": "",
+      "points": 1,
+      "acceptedCount": 1,
+      "status": "completed",
+      "applicationsCount": 1,
+      "assignedTo": null,
+      "createdAt": "2025-11-29T13:53:41.526Z",
+      "completedAt": "2025-11-29T13:55:04.394Z"
+    }
+  ],
+  "applications": [
+    {
+      "id": "1764422762845",
+      "missionId": "1764422702601",
+      "userId": "1764422738152",
+      "message": "",
+      "status": "completed",
+      "createdAt": "2025-11-29T13:26:02.845Z",
+      "completedAt": "2025-11-29T13:26:35.116Z"
+    },
+    {
+      "id": "1764423150828",
+      "missionId": "1764423095764",
+      "userId": "1764422738152",
+      "message": "",
+      "status": "completed",
+      "createdAt": "2025-11-29T13:32:30.828Z",
+      "completedAt": "2025-11-29T13:33:28.847Z"
+    },
+    {
+      "id": "1764424448485",
+      "missionId": "1764424421526",
+      "userId": "1764422738152",
+      "message": "",
+      "status": "completed",
+      "createdAt": "2025-11-29T13:54:08.485Z",
+      "completedAt": "2025-11-29T13:54:52.408Z"
+    }
+  ],
+  "missionCategories": [
+    {
+      "id": 1,
+      "name": "Environnement",
+      "icon": "🌿",
+      "color": "#22c55e"
+    },
+    {
+      "id": 2,
+      "name": "Social",
+      "icon": "🤝",
+      "color": "#3b82f6"
+    },
+    {
+      "id": 3,
+      "name": "Éducation",
+      "icon": "📚",
+      "color": "#f59e0b"
+    },
+    {
+      "id": 4,
+      "name": "Santé",
+      "icon": "🏥",
+      "color": "#ef4444"
+    },
+    {
+      "id": 5,
+      "name": "Culture",
+      "icon": "🎭",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": 6,
+      "name": "Sport",
+      "icon": "⚽",
+      "color": "#06b6d4"
+    },
+    {
+      "id": 7,
+      "name": "Solidarité",
+      "icon": "💪",
+      "color": "#ec4899"
+    },
+    {
+      "id": 8,
+      "name": "Autre",
+      "icon": "✨",
+      "color": "#6b7280"
+    }
+  ],
+  "organizationTypes": [
+    {
+      "id": 1,
+      "name": "Entreprise",
+      "icon": "🏢"
+    },
+    {
+      "id": 2,
+      "name": "Association",
+      "icon": "🤲"
+    },
+    {
+      "id": 3,
+      "name": "Mairie",
+      "icon": "🏛️"
+    },
+    {
+      "id": 4,
+      "name": "Collectivité",
+      "icon": "🏘️"
+    },
+    {
+      "id": 5,
+      "name": "ONG",
+      "icon": "🌍"
+    },
+    {
+      "id": 6,
+      "name": "Fondation",
+      "icon": "🎗️"
+    },
+    {
+      "id": 7,
+      "name": "Établissement scolaire",
+      "icon": "🎓"
+    },
+    {
+      "id": 8,
+      "name": "Autre",
+      "icon": "�"
+    }
+  ],
+  "badges": [
+    {
+      "id": 1,
+      "name": "Bon Citoyen",
+      "description": "10 points accumulés",
+      "icon": "🌱",
+      "requirement": {
+        "totalPoints": 10
+      },
+      "level": 1
+    },
+    {
+      "id": 2,
+      "name": "Super Citoyen",
+      "description": "20 points accumulés",
+      "icon": "⭐",
+      "requirement": {
+        "totalPoints": 20
+      },
+      "level": 2
+    },
+    {
+      "id": 3,
+      "name": "Citoyen Exemplaire",
+      "description": "50 points accumulés",
+      "icon": "�",
+      "requirement": {
+        "totalPoints": 50
+      },
+      "level": 3
+    },
+    {
+      "id": 4,
+      "name": "Héros Local",
+      "description": "100 points accumulés",
+      "icon": "🦸",
+      "requirement": {
+        "totalPoints": 100
+      },
+      "level": 4
+    },
+    {
+      "id": 5,
+      "name": "Légende",
+      "description": "200 points accumulés",
+      "icon": "👑",
+      "requirement": {
+        "totalPoints": 200
+      },
+      "level": 5
+    },
+    {
+      "id": 6,
+      "name": "Première Mission",
+      "description": "Première mission complétée",
+      "icon": "�",
+      "requirement": {
+        "totalMissions": 1
+      },
+      "level": 0
+    },
+    {
+      "id": 7,
+      "name": "Éco-Héros",
+      "description": "5 missions environnementales",
+      "icon": "🌍",
+      "requirement": {
+        "category": 1,
+        "count": 5
+      },
+      "level": 0
+    },
+    {
+      "id": 8,
+      "name": "Champion Social",
+      "description": "5 missions sociales",
+      "icon": "💪",
+      "requirement": {
+        "category": 2,
+        "count": 5
+      },
+      "level": 0
+    }
+  ],
+  "citizenLevels": [
+    {
+      "minPoints": 0,
+      "maxPoints": 9,
+      "name": "Nouveau Citoyen",
+      "icon": "🌱",
+      "color": "#9ca3af"
+    },
+    {
+      "minPoints": 10,
+      "maxPoints": 19,
+      "name": "Bon Citoyen",
+      "icon": "🌿",
+      "color": "#22c55e"
+    },
+    {
+      "minPoints": 20,
+      "maxPoints": 49,
+      "name": "Super Citoyen",
+      "icon": "⭐",
+      "color": "#3b82f6"
+    },
+    {
+      "minPoints": 50,
+      "maxPoints": 99,
+      "name": "Citoyen Exemplaire",
+      "icon": "🏆",
+      "color": "#f59e0b"
+    },
+    {
+      "minPoints": 100,
+      "maxPoints": 199,
+      "name": "Héros Local",
+      "icon": "🦸",
+      "color": "#8b5cf6"
+    },
+    {
+      "minPoints": 200,
+      "maxPoints": null,
+      "name": "Légende",
+      "icon": "👑",
+      "color": "#ec4899"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "1764424504392",
+      "type": "xrp_reward",
+      "from": "rUe8yoetfTpwtf8M99AW96MsC2CzGUCCbY",
+      "to": "rnKY6sFHncwiUvxwmzgBHxe3HgxjcKwo2o",
+      "amount": 10,
+      "currency": "XRP",
+      "missionId": "1764424421526",
+      "participantId": "1764422738152",
+      "txHash": "AB5779301F572D0DBD646658142044659FAFEF772B67D8AE91E2C61EBFA78D24",
+      "status": "completed",
+      "createdAt": "2025-11-29T13:55:04.392Z"
+    }
+  ]
+}

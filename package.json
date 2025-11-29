@@ -1,0 +1,27 @@
+{
+  "name": "impact-identity",
+  "version": "1.0.0",
+  "description": "API backend pour Impact Identity - Système de réputation décentralisé sur XRPL",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "frontend": "cd frontend && npm run dev",
+    "frontend:install": "cd frontend && npm install",
+    "dev:all": "concurrently \"npm run dev\" \"npm run frontend\""
+  },
+  "keywords": ["xrpl", "blockchain", "nft", "impact", "reputation"],
+  "author": "Impact Identity Team",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "xrpl": "^3.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
