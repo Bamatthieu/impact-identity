@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const xrplService = require('../services/xrplService');
 const db = require('../services/supabase');
+const { authenticate } = require('../middleware/auth');
 
 // GET /api/xrpl/status - Status de la connexion XRPL
 router.get('/status', async (req, res) => {
@@ -83,7 +84,7 @@ router.get('/nfts/:address', async (req, res) => {
 });
 
 // GET /api/xrpl/my-wallet - Infos du wallet de l'utilisateur connecté
-router.get('/my-wallet', async (req, res) => {
+router.get('/my-wallet', authenticate, async (req, res) => {
   try {
     const user = req.user;
     
@@ -138,7 +139,7 @@ router.get('/my-wallet', async (req, res) => {
 });
 
 // GET /api/xrpl/my-transactions - Transactions de l'utilisateur connecté
-router.get('/my-transactions', async (req, res) => {
+router.get('/my-transactions', authenticate, async (req, res) => {
   try {
     const user = req.user;
     
@@ -170,7 +171,7 @@ router.get('/my-transactions', async (req, res) => {
 });
 
 // POST /api/xrpl/refresh-balance - Rafraîchir le solde depuis la blockchain
-router.post('/refresh-balance', async (req, res) => {
+router.post('/refresh-balance', authenticate, async (req, res) => {
   try {
     const user = req.user;
     
@@ -192,6 +193,88 @@ router.post('/refresh-balance', async (req, res) => {
       }
     });
   } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/xrpl/fund-wallet - Ajouter des fonds au wallet (via testnet faucet)
+router.post('/fund-wallet', authenticate, async (req, res) => {
+  try {
+    const user = req.user;
+    const { amountEUR } = req.body; // Montant en EUR fictif
+    
+    if (!user.walletAddress) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Aucun wallet associé' 
+      });
+    }
+
+    if (!amountEUR || amountEUR <= 0 || amountEUR > 1000) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Montant invalide (1-1000 EUR)' 
+      });
+    }
+
+    // Conversion fictive: 1 EUR = 0.5 XRP (taux fictif pour la démo)
+    const amountXRP = Math.floor(amountEUR * 0.5 * 100) / 100; // Arrondi à 2 décimales
+
+    // Sur le testnet, on peut utiliser le faucet pour ajouter des fonds
+    // Comme on ne peut pas appeler le faucet directement via API,
+    // on va créer un wallet temporaire avec des fonds et transférer
+    console.log(`💰 Demande d'ajout de fonds: ${amountEUR} EUR → ${amountXRP} XRP pour ${user.walletAddress}`);
+    
+    // Créer un wallet temporaire avec des fonds (le testnet faucet donne ~1000 XRP)
+    const tempWallet = await xrplService.createWallet();
+    console.log(`✅ Wallet temporaire créé avec ${tempWallet.balance} XRP`);
+
+    // Transférer les XRP du wallet temporaire vers le wallet de l'utilisateur
+    const result = await xrplService.sendXRP(
+      { seed: tempWallet.seed },
+      user.walletAddress,
+      amountXRP
+    );
+
+    if (!result.success) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Échec du transfert: ' + (result.error || 'Erreur inconnue')
+      });
+    }
+
+    // Enregistrer la transaction dans la base de données
+    const transaction = await db.createTransaction({
+      type: 'deposit',
+      amount: amountXRP,
+      fromUserId: null, // Pas d'utilisateur source (système)
+      toUserId: user.id,
+      from: tempWallet.address,
+      to: user.walletAddress,
+      txHash: result.txHash,
+      status: 'completed',
+      description: `Dépôt de ${amountEUR} EUR (≈ ${amountXRP} XRP)`
+    });
+    
+    // Ajouter le montant EUR pour l'affichage (pas dans la DB)
+    transaction.amountEUR = amountEUR;
+
+    // Récupérer le nouveau solde
+    const newBalance = await xrplService.getBalance(user.walletAddress);
+
+    res.json({
+      success: true,
+      data: {
+        amountEUR,
+        amountXRP,
+        txHash: result.txHash,
+        newBalance: parseFloat(newBalance),
+        address: user.walletAddress,
+        message: `${amountXRP} XRP ajoutés avec succès !`
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur ajout de fonds:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

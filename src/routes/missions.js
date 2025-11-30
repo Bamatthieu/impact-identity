@@ -85,6 +85,34 @@ router.get('/categories', async (req, res) => {
   });
 });
 
+// GET /api/missions/my-applications - Récupérer les candidatures de l'utilisateur connecté
+router.get('/my-applications', authenticate, requireRole(['client']), async (req, res) => {
+  try {
+    const applications = await db.getApplicationsByUser(req.user.id);
+    const categories = await db.getMissionCategories();
+    
+    // Enrichir avec les informations de la mission et catégorie
+    const enrichedApplications = applications.map(app => {
+      const category = categories.find(c => c.id === app.mission?.categoryId || c.name === app.mission?.category);
+      return {
+        ...app,
+        mission: app.mission ? {
+          ...app.mission,
+          category
+        } : null
+      };
+    });
+
+    res.json({
+      success: true,
+      data: enrichedApplications
+    });
+  } catch (error) {
+    console.error('Erreur récupération candidatures:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // GET /api/missions/:id - Récupérer une mission spécifique
 router.get('/:id', authenticate, async (req, res) => {
   try {

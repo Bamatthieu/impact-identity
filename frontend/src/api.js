@@ -51,6 +51,7 @@ export const createMission = (data) => api.post('/missions', data);
 export const updateMission = (id, data) => api.put(`/missions/${id}`, data);
 export const deleteMission = (id) => api.delete(`/missions/${id}`);
 export const applyToMission = (id, message) => api.post(`/missions/${id}/apply`, { message });
+export const getMyApplications = () => api.get('/missions/my-applications');
 export const getMissionApplications = (id) => api.get(`/missions/${id}/applications`);
 export const updateApplicationStatus = (missionId, appId, status) => api.put(`/missions/${missionId}/applications/${appId}`, { status });
 export const completeMission = (id, participantIds) => api.post(`/missions/${id}/complete`, { participantIds });
@@ -78,6 +79,7 @@ export const createWallet = () => api.post('/xrpl/wallet');
 export const getMyWallet = () => api.get('/xrpl/my-wallet');
 export const getMyTransactions = () => api.get('/xrpl/my-transactions');
 export const refreshBalance = () => api.post('/xrpl/refresh-balance');
+export const fundWallet = (amountEUR) => api.post('/xrpl/fund-wallet', { amountEUR });
 
 // Blockchain (Admin)
 export const getBlockchainStatus = () => api.get('/blockchain/status');

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -120,8 +121,20 @@ export default function MissionsMap() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold text-white">🗺️ Missions près de vous</h1>
-            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
-              <span className="text-white font-semibold">{filteredMissions.length} missions</span>
+            <div className="flex items-center gap-3">
+              {isClient && (
+                <Link to="/my-missions" className="px-5 py-2 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105" style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #6366f1)'
+                }}>
+                  <span className="text-white flex items-center gap-2">
+                    <span>📋</span>
+                    <span>Mes Missions</span>
+                  </span>
+                </Link>
+              )}
+              <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
+                <span className="text-white font-semibold">{filteredMissions.length} missions</span>
+              </div>
             </div>
           </div>
           
@@ -269,13 +282,24 @@ export default function MissionsMap() {
               <div className="mb-6 p-5 rounded-2xl shadow-xl" style={{ background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' }}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-white font-semibold text-sm">RÉCOMPENSE</span>
-                  <span className="text-3xl font-bold text-white">
-                    {selectedMission.points || selectedMission.reward} pts
-                  </span>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-white">
+                      {selectedMission.points || selectedMission.reward} pts
+                    </div>
+                    {selectedMission.rewardXRP > 0 && (
+                      <div className="text-xl font-bold text-white/90 mt-1">
+                        + {selectedMission.rewardXRP} XRP
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-white/90 text-sm">
                   <span>🏆</span>
-                  <span>Points d'impact + NFT certifié</span>
+                  <span>
+                    {selectedMission.rewardXRP > 0 
+                      ? `Points d'impact + ${selectedMission.rewardXRP} XRP + NFT certifié`
+                      : 'Points d\'impact + NFT certifié'}
+                  </span>
                 </div>
               </div>
 
@@ -283,6 +307,14 @@ export default function MissionsMap() {
               <div className="mb-6 bg-white/5 rounded-xl p-4 border border-white/10">
                 <h3 className="font-bold text-white mb-3 text-lg">📋 Description</h3>
                 <p className="text-white/80 leading-relaxed text-sm">{selectedMission.description}</p>
+                {selectedMission.rewardXRP > 0 && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="flex items-center gap-2 text-blue-300 font-semibold">
+                      <span>💰</span>
+                      <span>Récompense : {selectedMission.rewardXRP} XRP</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {selectedMission.requirements && (

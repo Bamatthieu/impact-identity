@@ -134,11 +134,15 @@ export default function CreateMission() {
 
     try {
       // categoryId est un UUID (string), pas un nombre
+      // Créer une date ISO complète avec timezone
+      const dateTimeStr = `${formData.date}T${formData.time}:00`;
+      const missionDate = new Date(dateTimeStr);
+      
       const missionData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         categoryId: formData.categoryId, // UUID string
-        date: `${formData.date}T${formData.time}:00`,
+        date: missionDate.toISOString(), // Format ISO complet avec timezone
         duration: Number(formData.duration) || 60,
         rewardXRP: effectiveXRP, // 0 si bénévole
         maxParticipants: Number(formData.maxParticipants) || 10,

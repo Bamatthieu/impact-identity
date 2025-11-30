@@ -189,12 +189,11 @@ class Database {
   // ==================== MISSIONS ====================
   async createMission(missionData) {
     const durationHours = (missionData.duration || 60) / 60;
-    let points = Math.ceil(durationHours);
+    const basePoints = Math.ceil(durationHours);
     
-    // Si mission bénévole, doubler les points
-    if (missionData.isVolunteer) {
-      points = points * 2;
-    }
+    // Les points de base sont stockés normalement
+    // Le doublement pour les missions bénévoles se fait à la validation (ligne 479 de missions.js)
+    const points = basePoints;
 
     // Gérer la date correctement
     let startDate = null;
@@ -338,6 +337,7 @@ class Database {
       category: dbMission.category,
       categoryId: dbMission.category,
       rewardXRP: parseFloat(dbMission.reward_xrp) || 0,
+      reward: parseFloat(dbMission.reward_xrp) || 0, // Alias pour compatibilité
       points: dbMission.points || 0,
       duration: dbMission.duration || 60,
       maxParticipants: dbMission.max_participants || 1,
@@ -349,7 +349,8 @@ class Database {
         lng: parseFloat(dbMission.location_lng) || null
       },
       address: dbMission.location_address,
-      startDate: dbMission.start_date,
+      date: dbMission.start_date, // Format principal pour le frontend
+      startDate: dbMission.start_date, // Alias pour compatibilité
       endDate: dbMission.end_date,
       status: dbMission.status === 'active' ? 'published' : dbMission.status,
       isVolunteer: dbMission.is_volunteer || false,

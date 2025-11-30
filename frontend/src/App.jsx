@@ -6,10 +6,12 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import MissionsMap from './pages/MissionsMap'
+import MyMissions from './pages/MyMissions'
 import CreateMission from './pages/CreateMission'
 import ManageMission from './pages/ManageMission'
 import Leaderboard from './pages/Leaderboard'
 import Wallet from './pages/Wallet'
+import FundWallet from './pages/FundWallet'
 import AdminOrganizations from './pages/AdminOrganizations'
 import AdminBlockchain from './pages/AdminBlockchain'
 import AdminUsers from './pages/AdminUsers'
@@ -203,9 +205,21 @@ function AppContent() {
             </ProtectedRoute>
           } />
           
+          <Route path="/my-missions" element={
+            <ProtectedRoute roles={['client']}>
+              <MyMissions />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/wallet" element={
             <ProtectedRoute>
               <Wallet />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/wallet/fund" element={
+            <ProtectedRoute>
+              <FundWallet />
             </ProtectedRoute>
           } />
           

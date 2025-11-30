@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import * as api from '../api';
 
@@ -69,9 +70,19 @@ export default function Wallet() {
     <div className="min-h-screen p-6" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">💳 Mon Wallet</h1>
-          <p className="text-teal-200">Gérez vos XRP et NFTs sur la blockchain XRPL</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">💳 Mon Wallet</h1>
+            <p className="text-teal-200">Gérez vos XRP et NFTs sur la blockchain XRPL</p>
+          </div>
+          <Link to="/wallet/fund" className="px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105" style={{
+            background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)'
+          }}>
+            <span className="text-white flex items-center gap-2">
+              <span>💰</span>
+              <span>Ajouter des Fonds</span>
+            </span>
+          </Link>
         </div>
 
         {error && (

@@ -17,6 +17,8 @@ export default function Dashboard() {
   const { user, isAdmin, isClient, isOrganization } = useAuth();
   const [stats, setStats] = useState(null);
   const [missions, setMissions] = useState([]);
+  const [myApplications, setMyApplications] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,6 +30,31 @@ export default function Dashboard() {
       if (isAdmin) {
         const statsRes = await api.getAdminStats();
         setStats(statsRes.data.data);
+      } else if (isClient) {
+        const [missionsRes, applicationsRes] = await Promise.all([
+          api.getMissions(),
+          api.getMyApplications()
+        ]);
+        setMissions(missionsRes.data.data);
+        setMyApplications(applicationsRes.data.data);
+      } else if (isOrganization) {
+        const [missionsRes, transactionsRes] = await Promise.all([
+          api.getMissions(),
+          api.getMyTransactions()
+        ]);
+        setMissions(missionsRes.data.data);
+        // Filtrer les dépôts de fonds de l'organisation
+        const deposits = transactionsRes.data.data
+          .filter(tx => tx.type === 'deposit' && tx.to === user.walletAddress)
+          .map(tx => {
+            // Extraire le montant EUR de la description
+            const eurMatch = tx.description?.match(/(\d+(?:\.\d+)?)\s*EUR/);
+            return {
+              ...tx,
+              amountEUR: eurMatch ? parseFloat(eurMatch[1]) : null
+            };
+          });
+        setTransactions(deposits);
       } else {
         const missionsRes = await api.getMissions();
         setMissions(missionsRes.data.data);
@@ -121,11 +148,19 @@ export default function Dashboard() {
               <h1 className="text-3xl font-bold text-white">🏢 {user?.name}</h1>
               <p className="text-teal-200">Tableau de bord organisation</p>
             </div>
-            <Link to="/missions/create" className="px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl" style={{
-              background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)'
-            }}>
-              <span className="text-white">+ Créer une mission</span>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link to="/wallet/fund" className="px-5 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl bg-white/10 border border-white/20 hover:bg-white/20">
+                <span className="text-white flex items-center gap-2">
+                  <span>💰</span>
+                  <span>Ajouter des Fonds</span>
+                </span>
+              </Link>
+              <Link to="/missions/create" className="px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl" style={{
+                background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)'
+              }}>
+                <span className="text-white">+ Créer une mission</span>
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -210,6 +245,114 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+
+          {/* Historique des dépôts de fonds */}
+          {transactions.length > 0 && (
+            <div className="mt-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <span>💰</span>
+                  <span>Historique des Fonds Ajoutés</span>
+                </h2>
+                <Link to="/wallet/fund" className="px-4 py-2 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl bg-white/10 border border-white/20 hover:bg-white/20">
+                  <span className="text-white text-sm">+ Ajouter des fonds</span>
+                </Link>
+              </div>
+
+              {/* Statistiques rapides */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div className="text-teal-300 text-sm font-medium mb-1">Total déposé</div>
+                  <div className="text-2xl font-bold text-white">
+                    {transactions.reduce((sum, tx) => sum + (tx.amount || 0), 0).toFixed(2)} XRP
+                  </div>
+                  <div className="text-white/50 text-xs mt-1">
+                    ≈ {transactions.reduce((sum, tx) => sum + (tx.amountEUR || 0), 0).toFixed(2)} EUR
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div className="text-blue-300 text-sm font-medium mb-1">Nombre de dépôts</div>
+                  <div className="text-2xl font-bold text-white">
+                    {transactions.length}
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div className="text-purple-300 text-sm font-medium mb-1">Dernier dépôt</div>
+                  <div className="text-sm font-semibold text-white">
+                    {new Date(transactions[transactions.length - 1]?.createdAt).toLocaleDateString('fr-FR')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Liste des dernières transactions */}
+              <div className="space-y-3">
+                {transactions.slice(-5).reverse().map((tx, index) => (
+                  <div 
+                    key={tx.id} 
+                    className={`bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all ${
+                      index === 0 ? 'border-teal-400/30' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-2xl">💳</span>
+                          <div>
+                            <div className="text-white font-semibold">
+                              {tx.description || 'Dépôt de fonds'}
+                            </div>
+                            <div className="text-white/50 text-xs mt-1">
+                              {new Date(tx.createdAt).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                        {tx.txHash && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-white/50">Transaction:</span>
+                            <a
+                              href={`https://testnet.xrpl.org/transactions/${tx.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 font-mono hover:underline"
+                            >
+                              {tx.txHash.substring(0, 8)}...{tx.txHash.substring(tx.txHash.length - 6)}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-teal-300">
+                          +{tx.amount} XRP
+                        </div>
+                        {tx.amountEUR && (
+                          <div className="text-white/50 text-sm mt-1">
+                            ({tx.amountEUR} EUR)
+                          </div>
+                        )}
+                        <span className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium bg-teal-500/20 text-teal-300 border border-teal-400/30">
+                          ✓ Complété
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {transactions.length > 5 && (
+                <div className="mt-4 text-center">
+                  <Link to="/wallet/fund" className="text-teal-300 hover:text-teal-200 text-sm font-medium">
+                    Voir tout l'historique ({transactions.length} transactions) →
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
