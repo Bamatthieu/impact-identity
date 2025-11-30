@@ -389,6 +389,73 @@ class XRPLService {
       throw error;
     }
   }
+
+  // Récupérer l'historique des transactions depuis la blockchain
+  async getTransactionHistory(address, limit = 50) {
+    await this.connect();
+    try {
+      const response = await this.client.request({
+        command: 'account_tx',
+        account: address,
+        ledger_index_min: -1,
+        ledger_index_max: -1,
+        limit: limit,
+        forward: false // Les plus récentes d'abord
+      });
+
+      // Formater les transactions pour l'affichage
+      const transactions = response.result.transactions.map(tx => {
+        const transaction = tx.tx || tx.tx_json;
+        const meta = tx.meta;
+        
+        // Calculer le montant en XRP
+        let amount = 0;
+        if (transaction.Amount) {
+          if (typeof transaction.Amount === 'string') {
+            amount = parseFloat(xrpl.dropsToXrp(transaction.Amount));
+          } else if (transaction.Amount.value) {
+            amount = parseFloat(transaction.Amount.value);
+          }
+        }
+
+        // Déterminer si c'est une entrée ou sortie
+        const isIncoming = transaction.Destination === address;
+        const isOutgoing = transaction.Account === address;
+
+        return {
+          id: transaction.hash || tx.hash,
+          hash: transaction.hash || tx.hash,
+          txHash: transaction.hash || tx.hash,
+          type: transaction.TransactionType,
+          account: transaction.Account,
+          destination: transaction.Destination,
+          amount: amount,
+          currency: 'XRP',
+          fee: transaction.Fee ? parseFloat(xrpl.dropsToXrp(transaction.Fee)) : 0,
+          status: meta?.TransactionResult === 'tesSUCCESS' ? 'completed' : 'failed',
+          isIncoming,
+          isOutgoing,
+          from: transaction.Account,
+          to: transaction.Destination,
+          fromName: isIncoming ? 'Externe' : 'Vous',
+          toName: isOutgoing ? 'Externe' : 'Vous',
+          createdAt: transaction.date 
+            ? new Date((transaction.date + 946684800) * 1000).toISOString() 
+            : new Date().toISOString(),
+          ledgerIndex: tx.ledger_index
+        };
+      });
+
+      // Filtrer pour ne garder que les Payment transactions
+      return transactions.filter(tx => tx.type === 'Payment');
+    } catch (error) {
+      console.log('Erreur récupération transactions blockchain:', error.message);
+      if (error.data?.error === 'actNotFound') {
+        return [];
+      }
+      return [];
+    }
+  }
 }
 
 module.exports = new XRPLService();

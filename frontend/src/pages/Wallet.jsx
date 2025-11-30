@@ -288,7 +288,7 @@ export default function Wallet() {
                       </div>
                       <div>
                         <p className="font-semibold text-white">
-                          {tx.missionTitle || tx.type}
+                          {tx.missionTitle || (tx.type === 'funding' || tx.type === 'deposit' ? '💰 Dépôt de fonds' : tx.type === 'reward' ? '🎁 Récompense' : tx.type === 'payment' ? '💸 Paiement' : tx.type)}
                         </p>
                         <p className="text-sm text-white/70">
                           {isReceived ? `De: ${tx.fromName}` : `À: ${tx.toName}`}

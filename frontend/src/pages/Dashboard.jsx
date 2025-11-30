@@ -43,18 +43,14 @@ export default function Dashboard() {
           api.getMyTransactions()
         ]);
         setMissions(missionsRes.data.data);
-        // Filtrer les dépôts de fonds de l'organisation
-        const deposits = transactionsRes.data.data
-          .filter(tx => tx.type === 'deposit' && tx.to === user.walletAddress)
-          .map(tx => {
-            // Extraire le montant EUR de la description
-            const eurMatch = tx.description?.match(/(\d+(?:\.\d+)?)\s*EUR/);
-            return {
-              ...tx,
-              amountEUR: eurMatch ? parseFloat(eurMatch[1]) : null
-            };
-          });
-        setTransactions(deposits);
+        // Filtrer les transactions entrantes (reçues) de l'organisation
+        const incomingTx = transactionsRes.data.data
+          .filter(tx => tx.isIncoming || tx.to === user.walletAddress)
+          .map(tx => ({
+            ...tx,
+            amountEUR: tx.amount * 2 // Conversion inverse: 1 XRP ≈ 2 EUR (fictif)
+          }));
+        setTransactions(incomingTx);
       } else {
         const missionsRes = await api.getMissions();
         setMissions(missionsRes.data.data);

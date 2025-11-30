@@ -13,6 +13,8 @@ export default function FundWallet() {
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [allTransactions, setAllTransactions] = useState([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successData, setSuccessData] = useState(null);
 
   const quickAmounts = [10, 20, 50, 100, 200];
   const conversionRate = 0.5; // 1 EUR = 0.5 XRP (fictif)
@@ -28,20 +30,16 @@ export default function FundWallet() {
         api.getMyTransactions()
       ]);
       setWallet(walletRes.data.data);
-      // Filtrer tous les dépôts et extraire EUR de la description
-      const deposits = transactionsRes.data.data
-        .filter(tx => tx.type === 'deposit' && tx.to === user.walletAddress)
-        .map(tx => {
-          // Extraire le montant EUR de la description (ex: "Dépôt de 50 EUR")
-          const eurMatch = tx.description?.match(/(\d+(?:\.\d+)?)\s*EUR/);
-          return {
-            ...tx,
-            amountEUR: eurMatch ? parseFloat(eurMatch[1]) : null
-          };
-        });
-      setAllTransactions(deposits);
+      // Afficher toutes les transactions entrantes (reçues)
+      const incomingTransactions = transactionsRes.data.data
+        .filter(tx => tx.isIncoming || tx.to === user.walletAddress)
+        .map(tx => ({
+          ...tx,
+          amountEUR: tx.amount * 2 // Conversion inverse: 1 XRP ≈ 2 EUR (fictif)
+        }));
+      setAllTransactions(incomingTransactions);
       // Les 5 derniers pour la sidebar
-      setRecentTransactions(deposits.slice(-5).reverse());
+      setRecentTransactions(incomingTransactions.slice(0, 5));
     } catch (error) {
       console.error('Erreur chargement wallet:', error);
       showToast('Erreur lors du chargement du wallet', 'error');
@@ -61,7 +59,18 @@ export default function FundWallet() {
     setProcessing(true);
     try {
       const res = await api.fundWallet(amount);
-      showToast(res.data.data.message, 'success');
+      
+      // Utiliser les données réelles retournées par le faucet
+      const data = res.data.data;
+      setSuccessData({
+        amountEUR: amount,
+        amountXRP: data.amountXRP?.toFixed(2) || '100.00',
+        newBalance: data.newBalance?.toFixed(2) || '0.00',
+        message: data.message || 'Fonds ajoutés avec succès !'
+      });
+      
+      // Afficher le modal de succès
+      setShowSuccessModal(true);
       
       // Recharger les données du wallet
       await loadWalletData();
@@ -69,9 +78,12 @@ export default function FundWallet() {
       // Réinitialiser le formulaire
       setAmountEUR('');
       setSelectedAmount(null);
+      
+      showToast(data.message, 'success');
     } catch (error) {
       console.error('Erreur ajout de fonds:', error);
-      showToast(error.response?.data?.error || 'Erreur lors de l\'ajout de fonds', 'error');
+      const errorMsg = error.response?.data?.error || 'Erreur lors de l\'ajout de fonds';
+      showToast(errorMsg, 'error');
     } finally {
       setProcessing(false);
     }
@@ -449,6 +461,66 @@ export default function FundWallet() {
           </div>
         )}
       </div>
+
+      {/* Modal de succès */}
+      {showSuccessModal && successData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            onClick={() => setShowSuccessModal(false)}
+          />
+          <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-scale-in">
+            {/* Icône de succès animée */}
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-teal-400 to-green-500 flex items-center justify-center animate-bounce">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Titre */}
+            <h3 className="text-2xl font-bold text-white text-center mb-2">
+              🎉 Fonds ajoutés avec succès !
+            </h3>
+            <p className="text-teal-200 text-center mb-6">
+              Votre wallet a été crédité
+            </p>
+
+            {/* Détails de la transaction */}
+            <div className="space-y-4 mb-6">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white/70 text-sm">Montant ajouté</span>
+                  <span className="text-2xl font-bold text-white">{successData.amountEUR} EUR</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/70 text-sm">Crédité en XRP</span>
+                  <span className="text-xl font-bold text-teal-300">+{successData.amountXRP} XRP</span>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-teal-500/20 to-green-500/20 rounded-xl p-4 border border-teal-400/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-teal-200 text-sm font-medium">Nouveau solde</span>
+                  <span className="text-2xl font-bold text-white">{successData.newBalance} XRP</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bouton de fermeture */}
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full py-4 rounded-xl font-bold text-lg text-white transition-all shadow-lg hover:shadow-xl hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)'
+              }}
+            >
+              Parfait ! 👍
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

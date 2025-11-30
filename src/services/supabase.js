@@ -694,22 +694,42 @@ class Database {
       .eq('status', 'completed');
 
     const completedCount = completedApps?.length || 0;
+    const userPoints = user.totalPoints || user.points || 0;
     const newBadges = [];
 
     for (const badge of badges) {
+      // Ne pas réattribuer un badge déjà possédé
       if (userBadgeIds.includes(badge.id)) continue;
 
       let earned = false;
 
-      // Badge basé sur les points
-      if (badge.pointsRequired && user.totalPoints >= badge.pointsRequired) {
-        earned = true;
+      // Badge basé sur les points (si pointsRequired > 0)
+      if (badge.pointsRequired && badge.pointsRequired > 0) {
+        if (userPoints >= badge.pointsRequired) {
+          earned = true;
+        }
       }
-
-      // Badge basé sur le nombre de missions
-      if (badge.category === 'mission' && completedCount >= 1) {
-        earned = true;
+      // Badge basé sur le nombre de missions (catégorie 'mission')
+      else if (badge.category === 'mission') {
+        // Extraire le nombre de missions requis de la description
+        // Ex: "Compléter sa première mission" = 1, "Compléter 5 missions" = 5
+        let missionsRequired = 1;
+        
+        if (badge.description?.includes('première')) {
+          missionsRequired = 1;
+        } else {
+          const descMatch = badge.description?.match(/(\d+)/);
+          if (descMatch) {
+            missionsRequired = parseInt(descMatch[1]);
+          }
+        }
+        
+        if (completedCount >= missionsRequired) {
+          earned = true;
+        }
       }
+      // Autres catégories (environment, social, etc.) - à implémenter si besoin
+      // Pour l'instant, on ne les attribue pas automatiquement
 
       if (earned) {
         await this.awardBadge(userId, badge.id);

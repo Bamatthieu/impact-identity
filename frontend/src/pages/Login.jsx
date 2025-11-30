@@ -31,47 +31,47 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-6xl">🌍</span>
-          <h1 className="text-3xl font-bold text-primary-700 mt-4">Zencity</h1>
-          <p className="text-gray-600 mt-2">Connectez-vous à votre compte</p>
+          <h1 className="text-3xl font-bold text-white mt-4">Zencity</h1>
+          <p className="text-teal-200 mt-2">Connectez-vous à votre compte</p>
         </div>
 
         {/* Formulaire */}
-        <div className="card">
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className="bg-red-500/20 border border-red-400/30 text-red-300 px-4 py-3 rounded-xl">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Email
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-teal-400 focus:bg-white/10 transition-all"
                 placeholder="votre@email.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Mot de passe
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-teal-400 focus:bg-white/10 transition-all"
                 placeholder="••••••••"
                 required
               />
@@ -80,7 +80,10 @@ function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 text-lg font-bold text-white rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+              style={{
+                background: loading ? 'linear-gradient(135deg, #6b7280, #4b5563)' : 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)'
+              }}
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -97,9 +100,9 @@ function Login() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-white/80">
               Pas encore de compte ?{' '}
-              <Link to="/register" className="text-primary-600 font-semibold hover:underline">
+              <Link to="/register" className="text-teal-300 font-semibold hover:text-teal-200 transition-colors">
                 S'inscrire
               </Link>
             </p>
@@ -107,9 +110,9 @@ function Login() {
         </div>
 
         {/* Info Admin */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-800 text-center">
-            <strong>Compte Admin :</strong><br />
+        <div className="mt-6 p-4 bg-blue-500/20 backdrop-blur-md border border-blue-400/30 rounded-xl">
+          <p className="text-sm text-blue-200 text-center">
+            <strong className="text-blue-100">Compte Admin :</strong><br />
             admin@impact-identity.com / admin123
           </p>
         </div>
