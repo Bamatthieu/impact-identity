@@ -251,7 +251,7 @@ export default function MissionsMap() {
                 </div>
                 <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3 border border-white/10">
                   <span className="text-2xl">📅</span>
-                  <span className="text-white/90 text-sm flex-1">{formatDate(selectedMission.date)}</span>
+                  <span className="text-white/90 text-sm flex-1">{formatDate(selectedMission.startDate)}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center gap-2 bg-white/5 rounded-xl p-3 border border-white/10">
