@@ -54,27 +54,27 @@ export default function AdminBlockchain() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button onClick={() => navigate('/dashboard')} className="text-gray-500 hover:text-gray-700 mb-4">
+          <button onClick={() => navigate('/dashboard')} className="text-white/70 hover:text-white mb-4 transition-colors">
             ← Retour au dashboard
           </button>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">⛓️ Suivi Blockchain</h1>
-              <p className="text-gray-600">Surveillance du réseau XRPL et des transactions</p>
+              <h1 className="text-3xl font-bold text-white">⛓️ Suivi Blockchain</h1>
+              <p className="text-teal-200">Surveillance du réseau XRPL et des transactions</p>
             </div>
-            <div className={`px-4 py-2 rounded-full font-medium ${
-              status?.connected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            <div className={`px-4 py-2 rounded-xl font-medium border ${
+              status?.connected ? 'bg-teal-500/20 text-teal-300 border-teal-400/30' : 'bg-red-500/20 text-red-300 border-red-400/30'
             }`}>
               {status?.connected ? '🟢 Connecté' : '🔴 Déconnecté'} - {status?.network?.toUpperCase()}
             </div>
@@ -83,42 +83,42 @@ export default function AdminBlockchain() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500">Wallets créés</span>
+              <span className="text-white/70">Wallets créés</span>
               <span className="text-2xl">💳</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900">{stats?.totalWallets || 0}</div>
-            <div className="text-sm text-gray-500 mt-1">
+            <div className="text-3xl font-bold text-white">{stats?.totalWallets || 0}</div>
+            <div className="text-sm text-teal-300 mt-1">
               {stats?.clientWallets || 0} clients • {stats?.organizationWallets || 0} orgs
             </div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500">Missions complétées</span>
+              <span className="text-white/70">Missions complétées</span>
               <span className="text-2xl">✅</span>
             </div>
-            <div className="text-3xl font-bold text-green-600">{stats?.completedMissions || 0}</div>
-            <div className="text-sm text-gray-500 mt-1">{stats?.totalNFTsMinted || 0} NFTs mintés</div>
+            <div className="text-3xl font-bold text-teal-400">{stats?.completedMissions || 0}</div>
+            <div className="text-sm text-teal-300 mt-1">{stats?.totalNFTsMinted || 0} NFTs mintés</div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500">Points distribués</span>
+              <span className="text-white/70">Points distribués</span>
               <span className="text-2xl">⭐</span>
             </div>
-            <div className="text-3xl font-bold text-purple-600">{stats?.totalPointsOnChain || 0}</div>
-            <div className="text-sm text-gray-500 mt-1">Total on-chain</div>
+            <div className="text-3xl font-bold text-purple-400">{stats?.totalPointsOnChain || 0}</div>
+            <div className="text-sm text-teal-300 mt-1">Total on-chain</div>
           </div>
           
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500">Réseau</span>
+              <span className="text-white/70">Réseau</span>
               <span className="text-2xl">🌐</span>
             </div>
-            <div className="text-xl font-bold text-blue-600">XRPL Testnet</div>
-            <div className="text-xs text-gray-500 mt-1 truncate">{status?.serverUrl}</div>
+            <div className="text-xl font-bold text-blue-400">XRPL Testnet</div>
+            <div className="text-xs text-white/50 mt-1 truncate">{status?.serverUrl}</div>
           </div>
         </div>
 
@@ -132,11 +132,12 @@ export default function AdminBlockchain() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-xl font-medium transition-all ${
                 activeTab === tab.key
-                  ? 'bg-green-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'text-white shadow-lg scale-105'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20 border border-white/20'
               }`}
+              style={activeTab === tab.key ? { background: 'linear-gradient(135deg, #34d399, #14b8a6, #3b82f6)' } : {}}
             >
               {tab.label}
             </button>
@@ -147,36 +148,36 @@ export default function AdminBlockchain() {
         {activeTab === 'overview' && (
           <div className="grid md:grid-cols-2 gap-6">
             {/* NFTs par catégorie */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">🏷️ NFTs par catégorie</h2>
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
+              <h2 className="text-xl font-bold text-white mb-4">🏷️ NFTs par catégorie</h2>
               {stats?.nftsByCategory && Object.keys(stats.nftsByCategory).length > 0 ? (
                 <div className="space-y-3">
                   {Object.entries(stats.nftsByCategory).map(([category, count]) => (
                     <div key={category} className="flex items-center justify-between">
-                      <span className="text-gray-700">{category}</span>
-                      <span className="font-bold text-green-600">{count}</span>
+                      <span className="text-white/80">{category}</span>
+                      <span className="font-bold text-teal-400">{count}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">Aucun NFT minté pour le moment</p>
+                <p className="text-white/60 text-center py-8">Aucun NFT minté pour le moment</p>
               )}
             </div>
 
             {/* Dernières transactions */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">🕐 Dernières activités</h2>
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
+              <h2 className="text-xl font-bold text-white mb-4">🕐 Dernières activités</h2>
               {transactions.length > 0 ? (
                 <div className="space-y-3">
                   {transactions.slice(0, 5).map((tx) => (
-                    <div key={tx.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={tx.id} className="flex items-center justify-between p-3 bg-white/10 border border-white/10 rounded-lg">
                       <div>
-                        <div className="font-medium text-gray-900">{tx.userName}</div>
-                        <div className="text-sm text-gray-500">{tx.missionTitle}</div>
+                        <div className="font-medium text-white">{tx.userName}</div>
+                        <div className="text-sm text-white/70">{tx.missionTitle}</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-green-600">+{tx.reward} pts</div>
-                        <div className="text-xs text-gray-400">
+                        <div className="font-bold text-teal-400">+{tx.reward} pts</div>
+                        <div className="text-xs text-white/50">
                           {tx.completedAt ? new Date(tx.completedAt).toLocaleDateString('fr-FR') : '-'}
                         </div>
                       </div>
@@ -184,12 +185,12 @@ export default function AdminBlockchain() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">Aucune transaction pour le moment</p>
+                <p className="text-white/60 text-center py-8">Aucune transaction pour le moment</p>
               )}
             </div>
 
             {/* Info XRPL */}
-            <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-sm p-6 text-white md:col-span-2">
+            <div className="bg-gradient-to-br from-blue-600/30 to-purple-600/30 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6 text-white md:col-span-2">
               <h2 className="text-xl font-bold mb-4">ℹ️ À propos de l'intégration blockchain</h2>
               <div className="grid md:grid-cols-3 gap-6">
                 <div>
@@ -218,40 +219,40 @@ export default function AdminBlockchain() {
         {activeTab === 'wallets' && (
           <div className="grid md:grid-cols-3 gap-6">
             {/* Liste des wallets */}
-            <div className="md:col-span-2 bg-white rounded-2xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">💳 Wallets ({wallets.length})</h2>
+            <div className="md:col-span-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
+              <h2 className="text-xl font-bold text-white mb-4">💳 Wallets ({wallets.length})</h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b text-left">
-                      <th className="pb-3 font-semibold">Utilisateur</th>
-                      <th className="pb-3 font-semibold">Rôle</th>
-                      <th className="pb-3 font-semibold">Adresse</th>
-                      <th className="pb-3 font-semibold">Action</th>
+                    <tr className="border-b border-white/20 text-left">
+                      <th className="pb-3 font-semibold text-white/90">Utilisateur</th>
+                      <th className="pb-3 font-semibold text-white/90">Rôle</th>
+                      <th className="pb-3 font-semibold text-white/90">Adresse</th>
+                      <th className="pb-3 font-semibold text-white/90">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {wallets.map((wallet) => (
-                      <tr key={wallet.walletAddress} className="border-b last:border-0 hover:bg-gray-50">
-                        <td className="py-3 font-medium">{wallet.userName}</td>
+                      <tr key={wallet.walletAddress} className="border-b border-white/10 last:border-0 hover:bg-white/5">
+                        <td className="py-3 font-medium text-white">{wallet.userName}</td>
                         <td className="py-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            wallet.userRole === 'organization' ? 'bg-blue-100 text-blue-700' :
-                            wallet.userRole === 'admin' ? 'bg-purple-100 text-purple-700' :
-                            'bg-green-100 text-green-700'
+                            wallet.userRole === 'organization' ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30' :
+                            wallet.userRole === 'admin' ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30' :
+                            'bg-teal-500/20 text-teal-300 border border-teal-400/30'
                           }`}>
                             {wallet.userRole}
                           </span>
                         </td>
                         <td className="py-3">
-                          <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          <code className="text-xs bg-white/10 text-white/90 px-2 py-1 rounded">
                             {wallet.walletAddress.slice(0, 8)}...{wallet.walletAddress.slice(-6)}
                           </code>
                         </td>
                         <td className="py-3">
                           <button
                             onClick={() => loadWalletDetails(wallet.walletAddress)}
-                            className="text-green-600 hover:underline text-sm"
+                            className="text-teal-400 hover:text-teal-300 text-sm transition-colors"
                           >
                             Voir détails
                           </button>
@@ -264,29 +265,29 @@ export default function AdminBlockchain() {
             </div>
 
             {/* Détails wallet sélectionné */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">🔍 Détails</h2>
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
+              <h2 className="text-xl font-bold text-white mb-4">🔍 Détails</h2>
               {walletDetails ? (
                 <div className="space-y-4">
                   <div>
-                    <div className="text-sm text-gray-500">Propriétaire</div>
-                    <div className="font-medium">{walletDetails.user?.name || 'N/A'}</div>
+                    <div className="text-sm text-white/70">Propriétaire</div>
+                    <div className="font-medium text-white">{walletDetails.user?.name || 'N/A'}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Adresse complète</div>
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded block mt-1 break-all">
+                    <div className="text-sm text-white/70">Adresse complète</div>
+                    <code className="text-xs bg-white/10 text-white/90 px-2 py-1 rounded block mt-1 break-all">
                       {walletDetails.address}
                     </code>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Balance XRP</div>
-                    <div className="font-bold text-xl text-blue-600">
+                    <div className="text-sm text-white/70">Balance XRP</div>
+                    <div className="font-bold text-xl text-blue-400">
                       {walletDetails.xrplInfo?.balance || 0} XRP
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">NFTs</div>
-                    <div className="font-bold text-xl text-green-600">
+                    <div className="text-sm text-white/70">NFTs</div>
+                    <div className="font-bold text-xl text-teal-400">
                       {walletDetails.nftCount || 0}
                     </div>
                   </div>
@@ -294,13 +295,13 @@ export default function AdminBlockchain() {
                     href={`https://testnet.xrpl.org/accounts/${walletDetails.address}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full text-center py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="block w-full text-center py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
                   >
                     🔗 Voir sur XRPL Explorer
                   </a>
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">
+                <p className="text-white/60 text-center py-8">
                   Sélectionnez un wallet pour voir les détails
                 </p>
               )}
@@ -309,45 +310,45 @@ export default function AdminBlockchain() {
         )}
 
         {activeTab === 'transactions' && (
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">📜 Historique des transactions ({transactions.length})</h2>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-xl p-6">
+            <h2 className="text-xl font-bold text-white mb-4">📜 Historique des transactions ({transactions.length})</h2>
             {transactions.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b text-left">
-                      <th className="pb-3 font-semibold">Date</th>
-                      <th className="pb-3 font-semibold">Type</th>
-                      <th className="pb-3 font-semibold">Utilisateur</th>
-                      <th className="pb-3 font-semibold">Mission</th>
-                      <th className="pb-3 font-semibold">Organisation</th>
-                      <th className="pb-3 font-semibold text-right">Récompense</th>
+                    <tr className="border-b border-white/20 text-left">
+                      <th className="pb-3 font-semibold text-white/90">Date</th>
+                      <th className="pb-3 font-semibold text-white/90">Type</th>
+                      <th className="pb-3 font-semibold text-white/90">Utilisateur</th>
+                      <th className="pb-3 font-semibold text-white/90">Mission</th>
+                      <th className="pb-3 font-semibold text-white/90">Organisation</th>
+                      <th className="pb-3 font-semibold text-white/90 text-right">Récompense</th>
                     </tr>
                   </thead>
                   <tbody>
                     {transactions.map((tx) => (
-                      <tr key={tx.id} className="border-b last:border-0 hover:bg-gray-50">
-                        <td className="py-3 text-sm text-gray-500">
+                      <tr key={tx.id} className="border-b border-white/10 last:border-0 hover:bg-white/5">
+                        <td className="py-3 text-sm text-white/70">
                           {tx.completedAt ? new Date(tx.completedAt).toLocaleString('fr-FR') : '-'}
                         </td>
                         <td className="py-3">
-                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                          <span className="px-2 py-1 bg-teal-500/20 text-teal-300 border border-teal-400/30 rounded-full text-xs font-medium">
                             ✅ Mission complétée
                           </span>
                         </td>
                         <td className="py-3">
-                          <div className="font-medium">{tx.userName}</div>
+                          <div className="font-medium text-white">{tx.userName}</div>
                           {tx.userWallet && (
-                            <code className="text-xs text-gray-400">
+                            <code className="text-xs text-white/50">
                               {tx.userWallet.slice(0, 8)}...
                             </code>
                           )}
                         </td>
-                        <td className="py-3">{tx.missionTitle}</td>
-                        <td className="py-3 text-gray-500">{tx.organizationName}</td>
+                        <td className="py-3 text-white/90">{tx.missionTitle}</td>
+                        <td className="py-3 text-white/70">{tx.organizationName}</td>
                         <td className="py-3 text-right">
-                          <span className="font-bold text-green-600">+{tx.reward} pts</span>
-                          <div className="text-xs text-gray-400">+ 1 NFT</div>
+                          <span className="font-bold text-teal-400">+{tx.reward} pts</span>
+                          <div className="text-xs text-white/50">+ 1 NFT</div>
                         </td>
                       </tr>
                     ))}
@@ -357,8 +358,8 @@ export default function AdminBlockchain() {
             ) : (
               <div className="text-center py-12">
                 <div className="text-4xl mb-4">📜</div>
-                <p className="text-gray-600">Aucune transaction pour le moment</p>
-                <p className="text-gray-400 text-sm mt-2">
+                <p className="text-white/70">Aucune transaction pour le moment</p>
+                <p className="text-white/50 text-sm mt-2">
                   Les transactions apparaîtront quand des missions seront complétées
                 </p>
               </div>
