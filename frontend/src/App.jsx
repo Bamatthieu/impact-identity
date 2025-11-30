@@ -102,7 +102,7 @@ function AppContent() {
             <Link to="/dashboard" className="flex items-center space-x-3">
               <span className="text-3xl">🌍</span>
               <span className="text-xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
-                Impact Identity
+                Zencity
               </span>
             </Link>
 

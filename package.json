@@ -1,7 +1,7 @@
 {
   "name": "impact-identity",
   "version": "1.0.0",
-  "description": "API backend pour Impact Identity - Système de réputation décentralisé sur XRPL",
+  "description": "API backend pour Zencity - Système de réputation décentralisé sur XRPL",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -17,7 +17,7 @@
     "impact",
     "reputation"
   ],
-  "author": "Impact Identity Team",
+  "author": "Zencity Team",
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.86.0",

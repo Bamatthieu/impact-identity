@@ -36,7 +36,7 @@ function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-6xl">🌍</span>
-          <h1 className="text-3xl font-bold text-primary-700 mt-4">Impact Identity</h1>
+          <h1 className="text-3xl font-bold text-primary-700 mt-4">Zencity</h1>
           <p className="text-gray-600 mt-2">Connectez-vous à votre compte</p>
         </div>
 

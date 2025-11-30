@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 // Route principale
 app.get('/', (req, res) => {
   res.json({
-    message: 'Bienvenue sur Impact Identity API 🚀',
+    message: 'Bienvenue sur Zencity API 🚀',
     version: '2.0.0',
     status: 'running',
     timestamp: new Date().toISOString(),
@@ -92,7 +92,7 @@ async function startServer() {
     console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   🚀 Impact Identity API                                  ║
+║   🚀 Zencity API                                  ║
 ║   ────────────────────────────────────────────────────    ║
 ║   Server:  http://localhost:${PORT}                       ║
 ║   Env:     ${config.nodeEnv}                                ║

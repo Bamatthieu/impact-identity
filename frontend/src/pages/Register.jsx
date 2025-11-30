@@ -107,7 +107,7 @@ export default function Register() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
         <div className="max-w-4xl w-full">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Rejoindre Impact Identity</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Rejoindre Zencity</h1>
             <p className="text-gray-600 mt-2">Choisissez votre type de compte</p>
           </div>
 

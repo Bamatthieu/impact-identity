@@ -3,7 +3,7 @@
 - 🇫🇷 [Version Française](#version-française)
 
 <a name="english-version"></a>
-# 🇬🇧 English Version — 🟦 Impact Identity
+# 🇬🇧 English Version — 🟦 Zencity
 
 ### *A decentralized reputation system rewarding real-world social & environmental actions using XRPL NFTs + MPTokens.*
 
@@ -11,7 +11,7 @@
 
 ## 🌍 Overview
 
-**Impact Identity** is a blockchain-based system that transforms real-world positive actions into **verifiable digital proofs**, using the **XRPL Testnet**.
+**Zencity** is a blockchain-based system that transforms real-world positive actions into **verifiable digital proofs**, using the **XRPL Testnet**.
 
 Each validated action (environmental, social, educational…) becomes:
 
@@ -69,7 +69,7 @@ Impact today is **invisible**.
 
 # 💡 Solution
 
-**Impact Identity** creates a **verifiable impact identity** for every user.
+**Zencity** creates a **verifiable zencity** for every user.
 
 ### Every validated action becomes:
 
@@ -420,7 +420,7 @@ MIT – free to use, replicate, expand.
 ---
 
 <a name="version-française"></a>
-# 🇫🇷 Version Française — 🟦 Impact Identity
+# 🇫🇷 Version Française — 🟦 Zencity
 
 ### *Un système de réputation décentralisé qui transforme chaque action sociale ou environnementale en preuve vérifiable sur XRPL.*
 
@@ -428,7 +428,7 @@ MIT – free to use, replicate, expand.
 
 ## 🌍 Présentation
 
-**Impact Identity** est une plateforme qui transforme les actions positives réalisées dans le monde réel en **preuves numériques vérifiables**, grâce à la blockchain **XRPL (Testnet)**.
+**Zencity** est une plateforme qui transforme les actions positives réalisées dans le monde réel en **preuves numériques vérifiables**, grâce à la blockchain **XRPL (Testnet)**.
 
 Chaque action validée (écologie, social, éducation…) devient :
 
@@ -484,7 +484,7 @@ Aujourd’hui, **l’impact n’a pas d’identité numérique**.
 
 # 💡 Solution
 
-Impact Identity crée une **identité d’impact vérifiable** pour chaque citoyen.
+Zencity crée une **identité d’impact vérifiable** pour chaque citoyen.
 
 ⚡ **Chaque action validée =**
 

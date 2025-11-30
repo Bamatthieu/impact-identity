@@ -38,7 +38,7 @@ function Leaderboard() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white">🏆 Classement</h1>
-          <p className="text-teal-200 mt-2">Les meilleurs contributeurs Impact Identity</p>
+          <p className="text-teal-200 mt-2">Les meilleurs contributeurs Zencity</p>
         </div>
 
         {/* Podium moderne */}
